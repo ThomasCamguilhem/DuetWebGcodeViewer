@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="FR-fr">
+<head>
+	<meta charset="utf-8">
+	<title>File API</title>
+
+	<link rel="stylesheet" href="style.css">
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+	<script src="https://threejs.org/build/three.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <!--script src="sketch.js"></script-->
+	<script src="lib/LineReader.js"></script>
+	<script src="lib/gcode_reader.js"></script>
+	<script src="lib/gcode_parser.js"></script>
+	<script src="lib/gcom_parser.js"></script>
+	<script src="lib/threeScene.js"></script>
+</head>
+<body>
+    <h1>Text File Reader</h1>
+    <div>
+      Select a text file: 
+      <input type="file" id="fileInput" width="400px">
+	  <button id="read"> Lecture </button>
+    </div>
+	<h2 id="status"></h2>
+	<div id="loadingBar" style="height: 25px; width: 600px; border: 1px solid black;">
+		<div id="loadedBar" style="height: 100%; width: 0%; background-color: #007000; color: #ffffff;">
+		</div>
+	</div>
+	<p id="eta"></p>
+    <pre id="fileDisplayArea" ></pre>
+	<div id="threeDisplay" style="height: 600px; width: 400px; display: inline-block;">
+	</div>
+	<form id="rendered-form" style="display: inline-block">
+		<div class="rendered-form" onchange="redrawScene()">
+			<div class="fb-checkbox-group form-group field-cura_disp" style="display: none" id="form_cura">
+				<label for="cura_disp" class="fb-checkbox-group-label">	Cura Wall types<br>	</label>
+				<div class="checkbox-group">
+					<div class="checkbox"  style="display: none">
+						<input name="cura_disp[]" id="fill_cura" type="checkbox" checked="checked">
+						<label for="fill_cura"> Fill </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="move_cura" type="checkbox" checked="checked">
+						<label for="move_cura"> Move </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="skin_cura" type="checkbox" checked="checked">
+						<label for="skin_cura"> Skin </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="skirt_cura" type="checkbox" checked="checked">
+						<label for="skirt_cura"> Skirt </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="support_cura" type="checkbox" checked="checked">
+						<label for="support_cura"> Support </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="wall-outer_cura" type="checkbox" checked="checked">
+						<label for="wall_outer_cura"> Wall outer </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="wall-inner_cura" type="checkbox" checked="checked">
+						<label for="wall_inner_cura"> Wall inner </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="cura_disp[]" id="unknown_cura" type="checkbox">
+						<label for="unknown_cura"> Unknown </label>
+					</div>
+				</div>
+			</div>
+			<div class="fb-checkbox-group form-group field-Simplify_disp" style="display: none" id="form_simp">
+				<label for="Simplify_disp" class="fb-checkbox-group-label"> Simplify 3D Wall Types<br> </label>
+				<div class="checkbox-group">
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="bridge_simp" type="checkbox" checked="checked" >
+						<label for="bridge_simp"> Bridge</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="gap_fill_simp" type="checkbox"  checked="checked" >
+						<label for="gap_fill_simp"> Gap fill</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="infill_simp" type="checkbox"  checked="checked" >
+						<label for="infill_simp"> Infill</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="inner_perimeter_simp" type="checkbox"  checked="checked" >
+						<label for="in-perimeter_simp"> Inner perimeter</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="outer_perimeter_simp" type="checkbox"  checked="checked" >
+						<label for="out-perimeter_simp"> Outer perimeter</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="move_simp" type="checkbox" checked="checked" >
+						<label for="move_simp"> Move </label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="skirt_simp" type="checkbox" checked="checked" >
+						<label for="skirt_simp"> Skirt</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="solid_layer_simp" type="checkbox"  checked="checked" >
+						<label for="solid_layer_simp"> Solid layer</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="support_simp" type="checkbox"  checked="checked" >
+						<label for="support_simp"> Support</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="dense_support_simp" type="checkbox"  checked="checked" >
+						<label for="dense_support_simp"> Dense support</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="unknown_simp" type="checkbox">
+						<label for="unknown_simp"> Unknown </label>
+					</div>
+				</div>
+			</div>
+			<div class="fb-checkbox-group form-group field-Slic3r_disp" style="display: none" id="form_slic">
+				<label for="Slic3r_disp" class="fb-checkbox-group-label"> Slic3r Wall Types<br> </label>
+				<div class="checkbox-group">
+					<div class="checkbox" style="display: none">
+						<input name="Simplify_disp[]" id="unknown_slic" type="checkbox" checked="checked" >
+						<label for="unknown_slic"> Extrusion</label>
+					</div>
+					<div class="checkbox" style="display: none">
+						<input name="Slic3r_disp[]" id="move_slic" type="checkbox" checked="checked" >
+						<label for="move_slic"> Move</label>
+					</div>
+				</div>
+			</div>
+			<input type="number" id="firstLayer" min="0" max="1000"><input type="number" id="lastLayer" min="1" max="1000">
+			<input type="button" onclick="redrawScene()" value="confirmer"></input>
+		</div>
+	</form>
+	<script>
+		initScene();
+	</script>
+</body>
+</html>
