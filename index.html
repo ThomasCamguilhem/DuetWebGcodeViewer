@@ -8,7 +8,8 @@
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<!--script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script-->
 	<script src="https://threejs.org/build/three.js"></script>
-	<!--script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script-->
+	<script src="https://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <!--script src="sketch.js"></script-->
 	<script src="lib/LineReader.js"></script>
 	<script src="lib/gcode_reader.js"></script>
@@ -30,7 +31,7 @@
 	</div>
 	<p id="eta"></p>
     <pre id="fileDisplayArea" ></pre>
-	<div id="threeDisplay" style="height: 600px; width: 400px; display: inline-block;">
+	<div id="threeDisplay" style="height: 600px; width: 600px; display: inline-block;">
 	</div>
 	<form id="rendered-form" style="display: inline-block">
 		<div class="rendered-form" onchange="redrawScene()">
@@ -136,6 +137,10 @@
 			<input type="number" id="firstLayer" min="0" max="1000"><input type="number" id="lastLayer" min="1" max="1000">
 			<input type="button" onclick="redrawScene()" value="confirmer"></input>
 		</div>
+	</form>
+	<form action="action_page.php" method="post" enctype="multipart/form-data">
+	  <input type="file" name="pic" id="image" accept="image/*">
+	  <input type="submit" name="submit">
 	</form>
 	<script>
 		initScene();
