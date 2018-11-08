@@ -4,18 +4,18 @@
 	<meta charset="utf-8">
 	<title>File API</title>
 
-	<link rel="stylesheet" href="style.css">
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-	<!--script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script-->
-	<script src="https://threejs.org/build/three.js"></script>
-	<script src="https://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
-	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <!--script src="sketch.js"></script-->
+	<link rel="stylesheet" href="css/style.css">
+	<script src="lib/jquery.min.js"></script>
+	<script src="lib/three.min.js"></script>
+	<script src="lib/stats.min.js"></script>
+	<script src="lib/OrbitControls.js"></script>
 	<script src="lib/LineReader.js"></script>
-	<script src="lib/gcode_reader.js"></script>
-	<script src="lib/gcode_parser.js"></script>
-	<script src="lib/gcom_parser.js"></script>
-	<script src="lib/threeScene.js"></script>
+	<script src="lib/FileUploader.js"></script>
+    <!--script src="sketch.js"></script-->
+	<script src="js/gcode_reader.js"></script>
+	<script src="js/gcode_parser.js"></script>
+	<script src="js/gcom_parser.js"></script>
+	<script src="js/threeScene.js"></script>
 </head>
 <body>
     <h1>Text File Reader</h1>
@@ -34,7 +34,7 @@
 	<div id="threeDisplay" style="height: 600px; width: 600px; display: inline-block;">
 	</div>
 	<form id="rendered-form" style="display: inline-block">
-		<div class="rendered-form" onchange="redrawScene()">
+		<div class="rendered-form" onchange=" initRedraw()">
 			<div class="fb-checkbox-group form-group field-cura_disp" style="display: none" id="form_cura">
 				<label for="cura_disp" class="fb-checkbox-group-label">	Cura Wall types<br>	</label>
 				<div class="checkbox-group">
@@ -145,5 +145,9 @@
 	<script>
 		initScene();
 	</script>
+	<form id="myAwesomeForm" method="post" action="/php-code-that-handles-fileupload.php">
+	    <input type="text" id="filename" name="filename" /> <!-- Filename -->
+	    <input type="submit" id="submitButton" name="submitButton" /> <!-- Submit -->
+</form>
 </body>
 </html>

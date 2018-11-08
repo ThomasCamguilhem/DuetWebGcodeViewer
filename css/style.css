@@ -1,0 +1,107 @@
+/*
+Theme Name: Gillion's Child
+Description: A child theme for Gillion theme
+Author: Shufflehound and a Treehouse staffer
+Template: gillion
+Tags: Gotham Rounded, here we come
+*/
+
+
+body, html body,html .menu-item a, h1, h2, h3, h4, h5, h6, p, body h1, body h2, body h3, body h4, body h5, body h6, .cat-item a,.post-categories,.post-categories a, .sh-heading-font {
+  font-family: "Gotham Rounded A", "Gotham Rounded B", "Gotham Rounded", "Helvetica Neue", Helvetica, Arial, sans-serif, "Helvetica Neue", "Helvetica", "Roboto", "Arial", sans-serif; font-weight: 300 !important; font-style:normal;} 
+
+
+
+.post-meta, .post-categories, .post-switch-item-right, .sh-read-later-review-score, .sh-nav li.menu-item a, .sh-nav-container li.menu-item a, .sh-comment-date a, .post-button .post-button-text, .widget_categories li, .sh-dropcaps, .sh-dropcaps-full-square, .sh-dropcaps-full-square-border, .sh-dropcaps-full-square-tale, .sh-dropcaps-square-border, .sh-dropcaps-square-border2, .sh-dropcaps-circle, .comment-body .reply, .sh-comment-form label, blockquote, blockquote::after, .post-review-score, .sh-comment-author a, .sh-header-top .sh-nav li.menu-item a, .post-quote-link-content p, .instagram-post-overlay-container, .widget_categories li .count, .sh-login-popup, .widget-learn-more, .gillion-woocommerce ul.products li.product, .gillion-woocommerce div.product div.summary > :not(.woocommerce-product-details__short-description), .gillion-woocommerce div.product .woocommerce-tabs ul.tabs li a, .gillion-woocommerce #review_form, .gillion-woocommerce .widget_shopping_cart .cart_list > li > a:not(.remove), .gillion-woocommerce .widget_shopping_cart .total, .gillion-woocommerce .woocommerce-MyAccount-navigation ul li, .gillion-woocommerce table thead, body.woocommerce-account.woocommerce-page:not(.woocommerce-edit-address) .woocommerce-MyAccount-content > p, .gillion-woocommerce .woocommerce .button, .gillion-woocommerce #coupon_code, .sh-instagram-widget-with-button .null-instagram-feed .clear a {font-family: "Gotham Rounded A", "Gotham Rounded B", "Gotham Rounded", "Helvetica Neue", Helvetica, Arial, sans-serif, "Helvetica Neue", "Helvetica", "Roboto", "Arial", sans-serif; font-weight:400; font-style:normal !important;}
+
+
+
+.button.primary {
+    color: #fff;
+    background: #5fcf80;
+}
+button, html input[type="button"], input[type="reset"], input[type="submit"] {
+    -webkit-appearance: button;
+    cursor: pointer;
+}
+.button {
+    border-radius: 4px;
+    background: transparent;
+    border: 2px solid #5fcf80;
+    color: #5fcf80;
+    padding: 10px 26px;
+    font-size: 14px;
+    display: inline-block;
+    margin: 0;
+    font-weight: 500;
+    text-align: center;
+    -webkit-transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, width 200ms ease, opacity 200ms ease;
+    -moz-transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, width 200ms ease, opacity 200ms ease;
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, width 200ms ease, opacity 200ms ease;
+}
+
+.blogfreetrial a {
+	color: #5fcf80 !important;
+	font-size:1.025em !important;
+/* To make the "Free Trial item in the header menu green and slightly larger than the rest of the menu */
+}
+
+.icon-share {display:none !important;} /*removes the apparently unremovable social-media sharing function in the header menu*/
+
+/*blog grid post container all the same height*/
+.blog-style-grid .post-content-container,
+.blog-style-masonry .post-content-container {
+	height: 20em;
+	overflow: hidden;
+}
+
+/*style free trial button*/
+@media screen and (min-width: 768px) {
+  .blogfreetrial {
+    margin-left: 10px;
+    -webkit-transition: margin-left 200ms ease-in-out;
+    -moz-transition: margin-left 200ms ease-in-out;
+    transition: margin-left 200ms ease-in-out; }
+    .scrolled-past-hero .blogfreetrial {
+      margin-left: 37px; } }
+@media screen and (max-width: 767px) {
+  .blogfreetrial a {
+    -webkit-transition: background-color 200ms ease-in-out;
+    -moz-transition: background-color 200ms ease-in-out;
+    transition: background-color 200ms ease-in-out;
+    border-radius: 5px;
+    background-color: #5fcf80;
+    color: #fff;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 18px 7px; }
+    .blogfreetrial a:hover, .blogfreetrial a:active {
+      color: #fff;
+      background-color: #3ac162; } }
+@media screen and (min-width: 768px) {
+  .blogfreetrial a {
+    -webkit-transition: color 200ms ease-in-out, background-color 200ms ease-in-out, opacity 200ms ease-in-out, border-color 200ms ease-in-out, padding 200ms ease-in-out;
+    -moz-transition: color 200ms ease-in-out, background-color 200ms ease-in-out, opacity 200ms ease-in-out, border-color 200ms ease-in-out, padding 200ms ease-in-out;
+    transition: color 200ms ease-in-out, background-color 200ms ease-in-out, opacity 200ms ease-in-out, border-color 200ms ease-in-out, padding 200ms ease-in-out;
+    border-radius: 5px;
+    border: solid 2px transparent;
+    color: #5fcf80;
+    padding: 12px 0 12px 26px; }
+    .scrolling-up.scrolled-past-hero .blogfreetrial a {
+      border-color: transparent;
+      padding: 12px 0;
+      margin-left: 0; }
+      .scrolling-up.scrolled-past-hero .blogfreetrial a:hover, .scrolling-up.scrolled-past-hero .blogfreetrial a:active {
+        background-color: #fff;
+        color: #3ac162; }
+    .blogfreetrial a:hover, .blogfreetrial a:active {
+      color: #34ad58; } }
+@media screen and (min-width: 768px) {
+  .scrolled-past-hero .blogfreetrial a {
+    opacity: 1;
+    border-color: #5fcf80;
+    padding-right: 26px; }
+    .scrolled-past-hero .blogfreetrial a:hover, .scrolled-past-hero .blogfreetrial a:active {
+      color: #fff;
+      background-color: #5fcf80; } }
