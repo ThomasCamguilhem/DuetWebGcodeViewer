@@ -16,6 +16,53 @@
 	<script src="js/gcode_parser.js"></script>
 	<script src="js/gcom_parser.js"></script>
 	<script src="js/threeScene.js"></script>
+	<script>
+	function listFiles(url, div)
+	{
+		$.get("http://192.168.1.40/rr_filelist?dir=" + url + "&first=0",
+			function(data, status){
+        		for(var file in data.files)
+        		{
+        			if(data.files[file].type == "d")
+        			{
+        				div = document.createElement('div');
+        				div.style.display = "none"
+        				div.id = data.files[file].name;
+        				document.body.append(div);
+        				listFiles(url+"/"+data.files[file].name, div);
+        			} else {
+        				getFile(url, data.files[file].name, div)
+        			}
+        		}
+    		});
+	}
+	
+	function getFile(url, name, div)
+	{
+		var xhr = new XMLHttpRequest();
+		 xhr.onreadystatechange = function() {
+		      if (this.readyState == 4 && this.status == 200)
+		      {
+		    	  var res = this.response;
+		          var reader = new window.FileReader();
+		          reader.readAsDataURL(res); 
+		          reader.onloadend = function() {
+		        	  	pic = document.createElement('img');
+	        			pic.src = reader.result
+	        			pic.alt = name;
+	        			pic.height = "300";
+	        			pic.width = "300";
+	        			div.append(pic);
+		          }
+		      }
+		 }
+		 xhr.responseType = 'blob';
+		 xhr.open("GET", "http://192.168.1.40/rr_download?name=" + url + "/" + name);
+		 xhr.send();
+	}
+	
+	listFiles("0:/www/img", document.createElement('div'))
+	</script>
 </head>
 <body>
     <h1>Text File Reader</h1>
