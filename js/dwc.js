@@ -1458,7 +1458,7 @@ function updateStatus() {
 					var myFileName =  fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf("/")+1,fileInfo.fileName.lastIndexOf("."))
 					if (couchePrec != status.currentLayer)
 					{
-						getFile("0:/www/img/GCodePreview/" + myFileName, myFileName + "_" + status.currentLayer+".jpg", $("#layerPreview")[0])
+						getPicture("0:/www/img/GCodePreview/" + myFileName, myFileName + "_" + status.currentLayer+".jpg", $("#layerPreview")[0], 300)
 						couchePrec = status.currentLayer;
 					}
 				}
@@ -2312,8 +2312,14 @@ function setGCodeFileItem(row, size, lastModified, height, firstLayerHeight, lay
 
 	// Make entry interactive and link the missing data attributes to it
 	var linkCell = row.children().eq(1);
-	linkCell.find("span").removeClass("glyphicon-asterisk").addClass("glyphicon-file");
+	var img = document.createElement('img');
+	var name = linkCell.html().substring(linkCell.html().lastIndexOf(">")+2, linkCell.html().lastIndexOf("."));
+	img.id = name;
+	img.width = "20";
+	img.height = "20";
+	linkCell.find("span").replaceWith(img.outerHTML)//.removeClass("glyphicon-asterisk").addClass("glyphicon-file");
 	linkCell.html('<a href="#" class="a-gcode-file">' + linkCell.html() + '</a>');
+	getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
 	row.data("size", size);
 	row.data("last-modified", lastModifiedValue);
 	row.data("height", height);
@@ -2507,6 +2513,9 @@ $("body").on("click", ".a-gcode-directory", function(e) {
 
 $("body").on("click", ".a-gcode-file", function(e) {
 	var file = $(this).closest("tr").data("file");
+	var dirName = file.substring(0, file.lastIndexOf("."));
+	fileName = dirName + "_bp.jpg"
+	getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#modal_confirmation_img")[0], 200);
 	showConfirmationDialog(T("Run G-Code File"), T("Do you want to run <strong>{0}</strong>?", file), function() {
 		waitingForJobStart = true;
 		if (currentGCodeVolume != 0) {
@@ -3782,6 +3791,10 @@ $("#a_context_delete").click(function(e) {
 		if (file != undefined) {
 			// Delete single file
 			showConfirmationDialog(T("Delete File"), T("Are you sure you want to delete <strong>{0}</strong>?", file), function() {
+				if(file.includes(".gcode"))
+				{
+					deletePicture(file);
+				}
 				deletePath(file, contextMenuTargets);
 			});
 		} else {
@@ -10848,7 +10861,7 @@ var saveFile = function (strData, filename) {
 	 */ 
 	//SAVE_FILE
 	$.ajax({
-	    url:("http://192.168.1.40/rr_upload?name=0:/www/img/GCodePreview/"+fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"/"+filename+"&time="+new Date().toDateString()),//"/php-code-that-handles-fileupload.php",
+	    url:(ajaxPrefix + "rr_upload?name=0:/www/img/GCodePreview/"+fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"/"+filename+"&time="+new Date().toDateString()),//"/php-code-that-handles-fileupload.php",
 	    data: blob,// Add as Data the Previously create formData
 	    type:"POST",
 	    contentType:false,
@@ -10868,26 +10881,56 @@ var saveFile = function (strData, filename) {
 	});
 }
 
-function getFile(url, name, pic)
+function getPicture(url, name, pic, size)
 {
-	var xhr = new XMLHttpRequest();
-	 xhr.onreadystatechange = function() {
-	      if (this.readyState == 4 && this.status == 200)
-	      {
-	    	  var res = this.response;
-	          var reader = new window.FileReader();
-	          reader.readAsDataURL(res); 
-	          reader.onloadend = function() {
-        			pic.src = reader.result
-        			pic.alt = name;
-        			pic.height = "300";
-        			pic.width = "300";
-	          }
-	      }
-	 }
-	 xhr.responseType = 'blob';
-	 xhr.open("GET", "http://192.168.1.40/rr_download?name=" + url + "/" + name);
-	 xhr.send();
+	$.get(ajaxPrefix + "rr_filelist?dir=" + url + "&first=0",
+		function(data, status)
+		{
+			var xhr = new XMLHttpRequest();
+			 xhr.onreadystatechange = function() {
+			      if (this.readyState == 4 && this.status == 200)
+			      {
+			    	  var res = this.response;
+			          var reader = new window.FileReader();
+			          reader.readAsDataURL(res); 
+			          reader.onloadend = function() {
+			        	  if(pic)
+			        	  {
+			        	  	pic.src = reader.result
+			        	  	pic.alt = name;
+			        	  	pic.height = size;
+			        	  	pic.width = size;
+			        	  }
+			          }
+			      }
+			 }
+			 xhr.responseType = 'blob';
+			if (data.files.length > 0)
+			{
+				xhr.open("GET", ajaxPrefix + "rr_download?name=" + url + "/" + name);
+			} else {
+				xhr.open("GET", ajaxPrefix + "rr_download?name=0/www/img/GCodePreview/empty_bp.jpg");				
+			}
+			 xhr.send();
+		}
+	);
+}
+
+function deletePicture(name)
+{
+	var dir = name.substring(0, name.lastIndexOf("."));
+	var url = "0:/www/img/GCodePreview/" + dir
+	$.get(ajaxPrefix + "rr_filelist?dir=" + url + "&first=0",
+		function(data, status)
+		{
+			if (data.files.length > 0)
+			{
+				$.get(ajaxPrefix + "rr_delete?name=" + url + "/" + dir + "_ico.jpg", function(data, status){}, false);
+				$.get(ajaxPrefix + "rr_delete?name=" + url + "/" + dir + "_bp.jpg", function(data, status){}, false);
+				$.get(ajaxPrefix + "rr_delete?name=" + url, function(data, status){});
+			}
+		}
+	);
 }
 
 /* ======== THREE_SCENE ======== */
@@ -10958,7 +11001,7 @@ function initScene()
 	var topCircle = new THREE.Mesh( geometry, topMaterial );
 	topCircle.rotation.x = -Math.PI/2;
 	topCircle.position.y = 600;
-	scene.add( topCircle );
+	//scene.add( topCircle );
 	scene.add( buildPlate );
 	geometry = new THREE.CylinderGeometry( 190, 190, 600, 32, 1, true, 0, Math.PI );
 	material = new THREE.MeshPhongMaterial({color: 0xe0e0e0, side: THREE.BackSide} );
@@ -10970,23 +11013,23 @@ function initScene()
 		
 	controls = new THREE.OrbitControls( camera , $("#threeDisplay")[0]);
 	//controls.autoRotate = true;
-	controls.autoRotateSpeed = 1;
-	controls.panningMode = 1;
+	//controls.autoRotateSpeed = 1;
+	//controls.panningMode = 1;
 	
 	//  horizontally angle control
 	//controls.minAzimuthAngle = -Math.PI / 4;
 	//controls.maxAzimuthAngle = Math.PI / 4;
 	 
 	// vertical angle control
-	controls.minPolarAngle = -Math.PI / 2;
-	controls.maxPolarAngle = Math.PI / 2;
+	//controls.minPolarAngle = -Math.PI / 2;
+	//controls.maxPolarAngle = Math.PI / 2;
 	
 	// camera center
-	camera.position.set(-400, 250, 0);
-	// camera positive
+	camera.position.set(-400, 575, 0);
+	//camera positive
 	//camera.position.set(-100, 150, 100);
-	//camera.rotation.set(-Math.PI/2, 0, -Math.PI/2);
-	controls.update();
+	camera.rotation.set(-Math.PI/2, -1, -Math.PI/2);
+	//controls.update();
 	
 	function animate() {
 		statsfps.begin();
@@ -11126,6 +11169,18 @@ var fileSize;
 var meshMaterial;
 var fileInput;
 var lr;
+
+var gcodeLayers = [];
+//var gcodeLayer = {lBBox : {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}},points: []};
+var zLayer = 0;
+var zPrevLayer = 0;
+var lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, t: "Unknown"};
+var relative = false;
+var startLayer = 0;
+var relativeExtrude = false;
+var extruding = false;
+var boundingBox = {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}}
+
 window.onload = function() {
 	lr = new LineReader({chunkSize: 512	});
 	$("#read").click(function(){lectDonnees (document.getElementById('fileInput').files[0])})
@@ -11140,9 +11195,9 @@ function lectDonnees() {
 	{
 		if(slicer==undefined || key == "Unknown" || key != "length" )
 		{
-			for(var layer in pointCloud[key])
+			for(var gcodeLayer in pointCloud[key])
 			{
-				scene.remove(scene.getObjectByName(key+"_"+layer));
+				scene.remove(scene.getObjectByName(key+"_"+gcodeLayer));
 			}
 		}
 	}
@@ -11156,15 +11211,15 @@ function lectDonnees() {
 	var moveMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
 	fileInput = parseFiles[parsedFileCount];
 	fileSize = fileInput.size;
-	//jQuery.get("http://192.168.1.40/rr_mkdir?dir=0:/www/img/GCodePreview");
-	jQuery.get("http://192.168.1.40/rr_mkdir?dir=0:/www/img/GCodePreview/"+ fileInput.name.substring(0,fileInput.name.lastIndexOf(".")))
+	//jQuery.get(ajaxPrefix + "rr_mkdir?dir=0:/www/img/GCodePreview");
+	jQuery.get(ajaxPrefix + "rr_mkdir?dir=0:/www/img/GCodePreview/"+ fileInput.name.substring(0,fileInput.name.lastIndexOf(".")))
 	parseRows[parsedFileCount].find("#status")[0].innerHTML = "Parsing";
 	var lastPrct = -1;
 	var totalCount = 1;
 	var output = $('#fileDisplayArea');
 	boundingBox = {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}};
-	layers = [];
-	layer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
+	gcodeLayers = [];
+	gcodeLayer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
 	lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, t:"Unknown"};
 	relativeExtrude = false;
 	extruding = false;
@@ -11346,9 +11401,9 @@ function initRender()
 			keys.push(key)
 		}
 	}
-	for(var layer in pointCloud[keys[0]])
+	for(var gcodeLayer in pointCloud[keys[0]])
 	{
-		lays.push(layer);
+		lays.push(gcodeLayer);
 	}
 	var color = new THREE.Color().setHSL((i/nbKey), 0.75, 0.5);
 	//console.log(key +" ("+color.r+","+color.g+","+color.b+")")
@@ -11359,9 +11414,9 @@ function initRender()
 	{
 		if(slicer==undefined || key == "Unknown" || key != "length" )
 		{
-			for(var layer in pointCloud[key])
+			for(var gcodeLayer in pointCloud[key])
 			{
-				scene.remove(scene.getObjectByName(key+"_"+layer));
+				scene.remove(scene.getObjectByName(key+"_"+gcodeLayer));
 			}
 		}
 	}
@@ -11403,15 +11458,6 @@ function initRender()
 	var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
 	bbox.name = "bbox";
 	scene.add(bbox)
-	
-	var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
-	var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
-	var centerZ = (boundingBox.max.z + boundingBox.min.z)/2;
-	var width = boundingBox.max.x - boundingBox.min.x;
-	var length = boundingBox.max.y - boundingBox.min.y;
-	var height = boundingBox.max.z - boundingBox.min.z;
-	dFromC = 3/5*Math.sqrt(width*width+length*length)
-	controls.object.position.set(-centerX+dFromC*Math.cos(Math.PI/4), 4/5*(centerZ+Math.max(width, length, height)), centerY+dFromC*Math.sin(Math.PI/4))
 	newStatus = parseRows[parsedFileCount].find("#status");
 }
 
@@ -11427,11 +11473,24 @@ function renderLoop()
 		}, 1000);
 		var imgData, imgNode;
 		try {
-			controls.update();
+			//controls.update();
 			renderer.render( scene, camera );
 			var strMime = "image/jpeg";
 			imgData = renderer.domElement.toDataURL(strMime);
-			saveFile(imgData.replace(strMime, strDownloadMime), fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_"+(nbLayers)+".jpg");
+			saveFile(imgData.replace(strMime, strDownloadMime), fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_bp.jpg");
+			
+			var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
+			var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
+			var centerZ = (boundingBox.max.z + boundingBox.min.z)/2;
+			var width = boundingBox.max.x - boundingBox.min.x;
+			var length = boundingBox.max.y - boundingBox.min.y;
+			var height = boundingBox.max.z - boundingBox.min.z;
+			dFromC = 3/5*Math.sqrt(width*width+length*length);
+			controls.object.position.set(-centerX+dFromC*Math.cos(Math.PI/4), 4/5*(centerZ+Math.max(width, length, height)), centerY+dFromC*Math.sin(Math.PI/4));
+			controls.target.set(-centerX, centerZ, centerY);
+			controls.update();
+			renderer.render(scene, camera);
+			imgData = renderer.domElement.toDataURL(strMime);
 			saveFile(imgData.replace(strMime, strDownloadMime), fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_ico.jpg");
 		} catch (e) {
 			console.error(e);
@@ -11471,9 +11530,9 @@ function renderLoop()
 		}
 		i++;
 		lays = [];
-		for(var layer in pointCloud[keys[i]])
+		for(var gcodeLayer in pointCloud[keys[i]])
 		{
-			lays.push(layer);
+			lays.push(gcodeLayer);
 		}
 		var color = new THREE.Color().setHSL((i/nbKey), 0.75, 0.5);
 		//console.log(key +" ("+color.r+","+color.g+","+color.b+")")
@@ -11488,28 +11547,28 @@ function renderLoop()
 }
 
 
-function renderGeo(key, layer)
+function renderGeo(key, gcodeLayer)
 {
-	if (pointCloud[key] && pointCloud[key][layer])
+	if (pointCloud[key] && pointCloud[key][gcodeLayer])
 	{
-		pointCloud[key][layer].computeVertexNormals();
-		//pointCloud[key][layer].normalize();
+		pointCloud[key][gcodeLayer].computeVertexNormals();
+		//pointCloud[key][gcodeLayer].normalize();
 		if (fileSize < 10*1024*1024)
 		{
 		threeDee = (key != "MOVE"?new THREE.Mesh(
-			new THREE.BufferGeometry().fromGeometry(pointCloud[key][layer])
+			new THREE.BufferGeometry().fromGeometry(pointCloud[key][gcodeLayer])
 			, meshMaterial )
-			: new THREE.LineSegments(pointCloud[key][layer]
+			: new THREE.LineSegments(pointCloud[key][gcodeLayer]
 			, pointMaterial ))
 		} else {
-			threeDee =  new THREE.LineSegments(pointCloud[key][layer]
+			threeDee =  new THREE.LineSegments(pointCloud[key][gcodeLayer]
 			, pointMaterial )
 		}
 		if (key == "MOVE")
 			threeDee.visible = false;
 		threeDee.castShadow = true;
 		threeDee.receiveShadow = true;
-		threeDee.name = key+"_"+layer;
+		threeDee.name = key+"_"+gcodeLayer;
 		scene.add( threeDee );
 	}
 }
@@ -11521,17 +11580,6 @@ var PREVIEW = false;
 var SHOW_ALL = false;
 var SHOW_PREV = false;
 var SHOW_MOINS_2 = false;
-
-var layers = [];
-var layer = {lBBox : {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}},points: []};
-var zLayer = 0;
-var zPrevLayer = 0;
-var lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, t: "Unknown"};
-var relative = false;
-var startLayer = 0;
-var relativeExtrude = false;
-var extruding = false;
-var boundingBox = {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}}
 
 var pointCloud = {length: 1};
 
@@ -11563,13 +11611,13 @@ function extractGCode(args)
 				
 				if(curLay === undefined)
 				{
-					layers.push({layerStart: startLayer, layer: layer});
+					//gcodeLayers.push({gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer});
 					nbLayers++;
 				}
 				startLayer = instructionPos;
 				if(PREVIEW) {
 					/* ====== SHOW BOUNDING BOX ====== */
-					if (layers[curLay-1] || layers[curLay] || ((slicer == undefined || slicer == Slicer.SLIC) && nbLayers > 0))
+					if (gcodeLayers[curLay-1] || gcodeLayers[curLay] || ((slicer == undefined || slicer == Slicer.SLIC) && nbLayers > 0))
 					{
 						if (!scene.getObjectByName("bbox"))
 						{
@@ -11577,10 +11625,10 @@ function extractGCode(args)
 							var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
 							var width = boundingBox.max.x - boundingBox.min.x;
 							var length = boundingBox.max.y - boundingBox.min.y;
-							controls.object.position.set(-centerX, 0,centerY)
-							if (nbLayers && layHeight)
+							//controls.object.position.set(-centerX, 0,centerY)
+							/*if (nbLayers && layHeight)
 								controls.object.position.y = (nbLayers*layHeight)
-						}
+						*/}
 						scene.remove(scene.getObjectByName("bbox"))
 						var geo = new THREE.Geometry();
 						// bottom bbox
@@ -11622,7 +11670,7 @@ function extractGCode(args)
 						camera.position.set(-centerX, 0,centerY)
 						var width = boundingBox.max.x - boundingBox.min.x;
 						var length = boundingBox.max.y - boundingBox.min.y;
-						controls.target.x = -centerX;
+						/*controls.target.x = -centerX;
 						controls.target.z =  centerY;
 						//length)
 						if (curLay!=undefined && layHeight)
@@ -11633,7 +11681,7 @@ function extractGCode(args)
 							controls.object.position.y = 4/6*Math.max(width, length)+(lastPos.z);
 							controls.target.y = (boundingBox.max.z + boundingBox.min.z)/2;
 						}
-						controls.update();
+						controls.update();*/
 					}
 					nbKey = 0;
 					for (var key in pointCloud)
@@ -11699,11 +11747,11 @@ function extractGCode(args)
 						i++;
 					}
 					
-					if (layers.length > 1)
+					if (gcodeLayers.length > 1)
 					{
 						var imgData, imgNode;
 						try {
-							controls.update();
+							//controls.update();
 							renderer.render( scene, camera );
 							var strMime = "image/jpeg";
 							imgData = renderer.domElement.toDataURL(strMime);
@@ -11715,7 +11763,7 @@ function extractGCode(args)
 						}
 					}
 				}
-				layer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
+				gcodeLayer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
 			}
 			
 			if ((lastPos.x && lastPos.y && lastPos.z) && (args.x || args.y || args.z))
@@ -11774,10 +11822,6 @@ function extractGCode(args)
 			if (args.x)
 			{
 				lastPos.x = (relative?lastPos.x+args.x:args.x);
-				if (lastPos.x < layer.lBBox.min.x)
-					layer.lBBox.min.x = lastPos.x;
-				if (lastPos.x > layer.lBBox.max.x)
-					layer.lBBox.max.x = lastPos.x;
 				if (lastPos.x < boundingBox.min.x)
 					boundingBox.min.x = lastPos.x;
 				if (lastPos.x > boundingBox.max.x)
@@ -11787,10 +11831,6 @@ function extractGCode(args)
 			if (args.y)
 			{
 				lastPos.y = (relative?lastPos.y+args.y:args.y);
-				if (lastPos.y < layer.lBBox.min.y)
-					layer.lBBox.min.y = lastPos.y;
-				if (lastPos.y > layer.lBBox.max.y)
-					layer.lBBox.max.y = lastPos.y;
 				if (lastPos.y < boundingBox.min.y)
 					boundingBox.min.y = lastPos.y;
 				if (lastPos.y > boundingBox.max.y)
@@ -11799,10 +11839,6 @@ function extractGCode(args)
 			if (args.z)
 			{
 				lastPos.z = (relative?lastPos.z+args.z:args.z);
-				if (lastPos.z < layer.lBBox.min.z)
-					layer.lBBox.min.z = lastPos.z;
-				if (lastPos.z > layer.lBBox.max.z)
-					layer.lBBox.max.z = lastPos.z;
 				if (lastPos.z < boundingBox.min.z)
 					boundingBox.min.z = lastPos.z;
 				if (lastPos.z > boundingBox.max.z)
@@ -11824,7 +11860,7 @@ function extractGCode(args)
 				tmpPos.e = lastPos.e
 				tmpPos.f = lastPos.f
 				tmpPos.t = lastPos.t
-				layer.points.push(tmpPos);
+				//gcodeLayer.points.push(tmpPos);
 			}
 			break;
 			
@@ -12180,7 +12216,7 @@ function setPoly( start, end)
 	}
 	
 	if (!ftrr || ! fbrr || !ftll || ! fbll || !fttr || !fttl || !fbbr || ! fbbl )
-		console.error("C'est possible§")
+		console.error("C'est possible!")
 	//faces.push (new THREE.Face3( iv, iv+3, iv+4))
 	//faces.push (new THREE.Face3( iv, iv+4, iv+7)) // (2,7,6)
 	
@@ -12210,8 +12246,8 @@ function decodeCuraCom(args)
 			if(DEBUG)
 				console.log("Layer " + parseInt(args[1]) + "/" + nbLayers+"( "+ Math.round(parseInt(args[1])*layHeight*100)/100 + "/" + Math.round(nbLayers*layHeight*100)/100+"mm )");
 			var layNum = parseInt(args[1]);
-			if (layNum != 0)
-				layers[layNum] = {layerStart: startLayer, layer: layer};
+			//if (layNum != 0)
+				//gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};
 			curLay = layNum;
 			break;
 		case "LAYER_COUNT" :
@@ -12339,7 +12375,7 @@ function parseSimpCom(args)
 				console.log("wall type: " + "OUTER_PERIMETER" );
 			lastPos.t = "OUTER_PERIMETER";
 			break;
-		case "solid layer":
+		case "solid gcodeLayer":
 			if(DEBUG)
 				console.log("wall type: " + "SOLID_LAYER");
 			lastPos.t = "SOLID_LAYER";
@@ -12360,8 +12396,8 @@ function parseSimpCom(args)
 			if(DEBUG)
 				console.log("Layer " + args.layNum +(nbLayers?"/"+nbLayers:""));
 			var layNum = parseInt(args.layNum);
-			if (layNum != 0)
-				layers[layNum] = {layerStart: startLayer, layer: layer};
+			//if (layNum != 0)
+				//gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};
 			nbLayers++;
 			curLay = layNum;
 			break;
