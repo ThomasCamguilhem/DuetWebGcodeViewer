@@ -1536,7 +1536,7 @@
 										</table>
 									</div>
 									
-									<div id="PreviewGcode" class="panel panel-default">
+									<div id="PreviewGcode" class="panel panel-default" style="/*!display: none*/">
 										<div class="panel-heading"> Gcode Visualizer</div>
 										<div class="panel-body">
 											<div style="display: none">
@@ -1544,7 +1544,8 @@
 												<h2 id="status"></h2>
 												<div id="loadingBar" style="height: 25px; width: 600px; border: 1px solid black;"><div id="loadedBar" style="height: 100%; width: 0%; background-color: #007000; color: #ffffff;"></div>
 												</div><p id="eta"></p><div id="threeDisplay" style="height: 400px; width: 400px; "></div></div>
-												<img src="/img/PreviewGCode/index.jpg" id="layerPreview" alt="preview layer" width="400" height="400">
+												<svg id="layerPreview" alt="preview layer" width="400" height="400">
+												</svg>
 										</div>
 									</div>
 
@@ -3153,7 +3154,7 @@
 						<h4 class="modal-title"><!-- see JS--></h4>
 					</div>
 					<div class="modal-body">
-						<img id="modal_confirmation_img"/><p><!-- see JS --></p>
+						<img id="modal_confirmation_img" class="img_confirmation"/><p><!-- see JS --></p>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Yes</button>
