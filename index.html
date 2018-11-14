@@ -62,9 +62,79 @@
 	}
 	
 	listFiles("0:/www/img", document.createElement('div'))
+	
+	// Converts from degrees to radians.
+	Math.radians = function(degrees) {
+	  return degrees * Math.PI / 180;
+	};
+	 
+	// Converts from radians to degrees.
+	Math.degrees = function(radians) {
+	  return radians * 180 / Math.PI;
+	};
+	
+	function drawHead(pos, tnum)
+	{
+		if (tnum == 1)
+			pos.y -= 20;
+		if (tnum == 3){
+			pos.x += 20*Math.sqrt(3)/2
+			pos.y += 10
+		}
+		if (tnum == 2){
+			pos.x -= 20*Math.sqrt(3)/2
+			pos.y += 10
+		}
+		str = ""
+		for(var i = 0; i < 360; i += 60)
+		{
+			str += (i?", ":"")+(pos.x+(35*Math.cos(Math.radians(i)))) + " " +  (pos.y+(35*Math.sin(Math.radians(i))));
+			if(i == 0)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="587" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 60)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="573" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 120)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="27" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 180)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="13" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 240)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="290" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 300)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="310" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		}
+		console.log(str)
+		$("svg")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="lightgray" style="fill: none"></polygon>'
+		var posT1 = {};
+		posT1.x = pos.x + (20*Math.cos(Math.radians(90)));
+		posT1.y = pos.y + (20*Math.sin(Math.radians(90)));
+		drawTool(posT1, "red");
+		var posT3 = {};
+		posT3.x = pos.x + (20*Math.cos(Math.radians(-150)));
+		posT3.y = pos.y + (20*Math.sin(Math.radians(-150)));
+		drawTool(posT3, "blue");
+		pos.x+=(20*Math.cos(Math.radians(-30)));
+		pos.y+=(20*Math.sin(Math.radians(-30)));
+		drawTool(pos, "green");
+	}
+	
+	function drawTool(pos, col)
+	{
+		str = ""
+		for(var i = 0; i < 360; i += 60)
+		{
+			str += (i?", ":"")+(pos.x+(Math.cos(Math.radians(i)))) + " " +  (pos.y+(Math.sin(Math.radians(i))));
+		}
+		console.log(str)
+		$("svg")[0].innerHTML += '<polygon class="printHead" points="'+ str +'" stroke="'+col+'" style="fill: none"></polygon>'
+	}
+	function ready(){
+		drawHead({x:300, y:295},1);
+		drawHead({x:300, y:295},2);
+		drawHead({x:300, y:295},3);
+	}
 	</script>
 </head>
-<body>
+<body onload="ready()">
     <h1>Text File Reader</h1>
     <div>
       Select a text file: 
@@ -79,6 +149,14 @@
 	<p id="eta"></p>
     <pre id="fileDisplayArea" ></pre>
 	<div id="threeDisplay" style="height: 600px; width: 600px; display: inline-block;">
+	<svg width = "600" height ="520" >
+		<circle cx="300" cy="295" r="225" stroke="gray" stroke-width="1" style="fill: none;"></circle>
+		<circle cx="300" cy="295" r="180" stroke="gray" stroke-width="1" style="fill: none;"></circle>
+		<rect x="290" y="  0" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray;"></rect>
+		<rect x="  0" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 20px 520px;" transform="rotate(45)" ></rect>
+		<rect x="580" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 580px 520px;" transform="rotate(-45)"></rect>
+		
+	</svg>
 	</div>
 	<form id="rendered-form" style="display: inline-block">
 		<div class="rendered-form" onchange=" initRedraw()">

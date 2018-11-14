@@ -933,14 +933,28 @@ function updateStatus() {
 				numAxes = status.axes;
 				needGuiUpdate = true;
 			}
+			
 			if ($("td[data-axis='" + 0 + "']").html() != "n/a" && $("td[data-axis='" + 1 + "']").html() != "n/a")
 			{
-				if ((($("td[data-axis='" + 0 + "']").html() != status.coords.xyz[0].toFixed(2)) || 
-					($("td[data-axis='" + 1 + "']").html() != status.coords.xyz[1].toFixed(2))) 
-							&& ($("td[data-axis='" + 2 + "']").html() == status.coords.xyz[2].toFixed(2)))
-					$("#layerPreview")[0].innerHTML +="<line style='stroke:rgb(255,255,255);stroke-width:1'  x1='"+(200+parseFloat($("td[data-axis='" + 0 + "']").html()))+"' y1='"+(200+parseFloat($("td[data-axis='" + 1 + "']").html()))+"' x2='"+(200+parseFloat(status.coords.xyz[0].toFixed(2)))+"' y2='"+(200+parseFloat(status.coords.xyz[1].toFixed(2)))+"'/>"
-				else
-					$("#layerPreview")[0].innerHTML = '<circle cx="200" cy="200" r="190" stroke="gray" stroke-width="1" fill="black" />';
+				var x1 = (300+parseFloat($("td[data-axis='" + 0 + "']").html()));
+				var y1 = (295+parseFloat($("td[data-axis='" + 1 + "']").html()));
+				var z1 = parseFloat($("td[data-axis='" + 2 + "']").html());
+				var x2 = (300+parseFloat(status.coords.xyz[0].toFixed(2)));
+				var y2 = (295+parseFloat(status.coords.xyz[1].toFixed(2)));
+				var z2 = parseFloat(status.coords.xyz[2].toFixed(2));
+				if ((!isNaN(x1) && !isNaN(x2)) && (!isNaN(y1) && !isNaN(y2)) && (!isNaN(z1) && !isNaN(z2)))
+				{
+					if ((x1 != x2 || y1 != y2) && (z1 == z2))
+					{// changer couleur extrudeur
+						$("#layerPreview")[0].innerHTML +="<line class='printed_path' style='stroke:rgb(255,0,0);stroke-width:2'"+
+						"x1='"+ x1 + "' y1='" + y1 + "' x2='" + x2 + "' y2='" + y2 + "'/>"
+						$(".print_head").remove();
+						drawHead({x: x2, y: y2}, 1);
+					} else if (z1 != z2){
+						//redrawBP();
+						$(".printed_path").remove();
+					}
+				}
 			}
 			
 			for(var i = 0; i < status.coords.xyz.length; i++) {
@@ -7449,7 +7463,7 @@ function closeAllNotifications() {
 
 
 var settings = {
-	updateInterval: 250,			// in ms
+	updateInterval: 125,//500,			// in ms
 	extendedStatusInterval: 10,		// nth status request will include extended values
 	maxRetries: 2,					// number of AJAX retries before the connection is terminated
 
@@ -10660,7 +10674,7 @@ function initScene()
     helper = new THREE.PointLightHelper(light, 0.1);
 	scene.add(helper);
 	
-	var geometry = new THREE.CircleGeometry( 190, 30);
+	var geometry = new THREE.CircleGeometry( 180, 30);
 	var material = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 } );
 	var buildPlate = new THREE.Mesh(new THREE.CircleGeometry( 200, 30), new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }));
 	buildPlate.receiveShadow = true;
@@ -10690,18 +10704,18 @@ function initScene()
 	var gridSecGeo = new THREE.Geometry();
 	var materPrime = new THREE.LineBasicMaterial({ color: 0x7f7f7f});
 	var materSec = new THREE.LineBasicMaterial({ color: 0xafafaf});
-	for (var posY = -190; posY < 190; posY += 50)
+	for (var posY = -200; posY < 180; posY += 100)
 	{
-		var miniX = -190 * Math.sqrt(1 - ((posY/190) * (posY/190)));
-		var maxiX =  190 * Math.sqrt(1 - ((posY/190) * (posY/190)));
+		var miniX = -180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
+		var maxiX =  180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
 		gridPrimeGeo.vertices.push(new THREE.Vector3(miniX, 1, posY));
 		gridPrimeGeo.vertices.push(new THREE.Vector3(maxiX, 1, posY));
 		gridPrimeGeo.vertices.push(new THREE.Vector3(posY, 1, miniX));
 		gridPrimeGeo.vertices.push(new THREE.Vector3(posY, 1, maxiX));
-		for (var posX = posY + 10; posX < posY + 50; posX += 10)
+		for (var posX = posY + 20; posX < posY + 100; posX += 20)
 		{
-			miniX = -190 * Math.sqrt(1 - ((posX/190) * (posX/190)));
-			maxiX =  190 * Math.sqrt(1 - ((posX/190) * (posX/190)));
+			miniX = -180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
+			maxiX =  180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
 			gridSecGeo.vertices.push(new THREE.Vector3(miniX, 1, posX));
 			gridSecGeo.vertices.push(new THREE.Vector3(maxiX, 1, posX));
 			gridSecGeo.vertices.push(new THREE.Vector3(posX, 1, miniX));
@@ -10838,6 +10852,109 @@ function redrawScene(key, layer, visible)
 		scene.getObjectByName(key+"_"+layer).visible = visible;
 }
 
+
+
+// Converts from degrees to radians.
+Math.radians = function(degrees) {
+  return degrees * Math.PI / 180;
+};
+ 
+// Converts from radians to degrees.
+Math.degrees = function(radians) {
+  return radians * 180 / Math.PI;
+};
+
+function drawHead(pos, tnum)
+{
+	if (tnum == 1)
+		pos.y -= 20;
+	if (tnum == 3){
+		pos.x += 20*Math.sqrt(3)/2
+		pos.y += 10
+	}
+	if (tnum == 2){
+		pos.x -= 20*Math.sqrt(3)/2
+		pos.y += 10
+	}
+	str = ""
+	for(var i = 0; i < 360; i += 60)
+	{
+		str += (i?", ":"")+(pos.x+(35*Math.cos(Math.radians(i)))) + " " +  (pos.y+(35*Math.sin(Math.radians(i))));
+		if(i == 0)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="587" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		else if(i == 60)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="573" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		else if(i == 120)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="27" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		else if(i == 180)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="13" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		else if(i == 240)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="290" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		else if(i == 300)
+			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="310" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+	}
+	//console.log(str)
+	$("#layerPreview")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="lightgray" style="fill: none"></polygon>'
+	var posT1 = {};
+	posT1.x = pos.x + (20*Math.cos(Math.radians(90)));
+	posT1.y = pos.y + (20*Math.sin(Math.radians(90)));
+	drawTool(posT1, "red");
+	var posT3 = {};
+	posT3.x = pos.x + (20*Math.cos(Math.radians(-150)));
+	posT3.y = pos.y + (20*Math.sin(Math.radians(-150)));
+	drawTool(posT3, "blue");
+	pos.x+=(20*Math.cos(Math.radians(-30)));
+	pos.y+=(20*Math.sin(Math.radians(-30)));
+	drawTool(pos, "green");
+}
+
+function drawTool(pos, col)
+{
+	str = ""
+	for(var i = 0; i < 360; i += 60)
+	{
+		str += (i?", ":"")+(pos.x+(Math.cos(Math.radians(i)))) + " " +  (pos.y+(Math.sin(Math.radians(i))));
+	}
+	//console.log(str)
+	$("#layerPreview")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="'+col+'" style="fill: none"></polygon>'
+}
+
+function redrawBP(){
+	$("#layerPreview")[0].innerHTML = '<circle cx="300" cy="295" r="225" stroke="gray" stroke-width="1" fill="rgb(250,250,250)"/>';
+	$("#layerPreview")[0].innerHTML += '<circle cx="300" cy="295" r="180" stroke="gray" stroke-width="1" fill="rgb(250,250,250)"/>';
+	$("#layerPreview")[0].innerHTML += '<rect x="290" y="  0" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray;"></rect>';
+	$("#layerPreview")[0].innerHTML += '<rect x="  0" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 20px 520px;" transform="rotate(45)" ></rect>';
+	$("#layerPreview")[0].innerHTML += '<rect x="580" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 580px 520px;" transform="rotate(-45)"></rect>';
+	for (var posY = -200; posY < 180; posY += 100)
+	{
+		for (var posX = posY + 20; posX < posY + 100; posX += 20)
+		{
+			var miniX = -180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
+			var maxiX =  180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
+			if (!isNaN(miniX) && !isNaN(maxiX))
+			{
+				$("#layerPreview")[0].innerHTML +="<line style='stroke:rgb(200,200,200);stroke-width:1'  x1='"+
+					(300 + miniX) + "' y1='" + (295 + posX) + "' x2='" + (300 + maxiX) + "' y2='" + (295 + posX) + "'/>";
+				$("#layerPreview")[0].innerHTML +="<line style='stroke:rgb(200,200,200);stroke-width:1'  x1='"+
+					(300 + posX) + "' y1='" + (295 + miniX) + "' x2='" + (300 + posX) + "' y2='" + (295 + maxiX) + "'/>";
+			}
+		}
+		var miniX = -180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
+		var maxiX =  180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
+		if (!isNaN(miniX) && !isNaN(maxiX))
+		{
+			$("#layerPreview")[0].innerHTML +="<line style='stroke:rgb(125,125,125);stroke-width:1'  x1='"+
+				(300 + miniX) + "' y1='" + (295 + posY) + "' x2='" + (300 + maxiX) + "' y2='" + (295 + posY) + "'/>";
+			$("#layerPreview")[0].innerHTML +="<line style='stroke:rgb(125,125,125);stroke-width:1'  x1='"+
+				(300 + posY) + "' y1='" + (295 + miniX) + "' x2='" + (300 + posY) + "' y2='" + (295 + maxiX) + "'/>";
+		}
+	}
+}
+setTimeout( function(){
+	redrawBP()
+	drawHead({x: 300, y: 295});
+}
+		, 2000);
 
 /* ======== GCODE_READER ======== */
 
