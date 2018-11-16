@@ -633,6 +633,8 @@ function stopUpdates() {
 	stopUpdating = updateTaskLive;
 }
 var couchePrec = -1;
+var lastLayer = [[],[],[],[],[],[]];
+var nbTools = 1;
 function updateStatus() {
 	if (stopUpdating) {
 		updateTaskLive = false;
@@ -796,6 +798,7 @@ function updateStatus() {
 
 			// Tool Mapping
 			if (status.hasOwnProperty("tools")) {
+				nbTools = status.tools.length;
 				needGuiUpdate |= setToolMapping(status.tools);
 			}
 
@@ -936,23 +939,54 @@ function updateStatus() {
 			
 			if ($("td[data-axis='" + 0 + "']").html() != "n/a" && $("td[data-axis='" + 1 + "']").html() != "n/a")
 			{
-				var x1 = (300+parseFloat($("td[data-axis='" + 0 + "']").html()));
-				var y1 = (295+parseFloat($("td[data-axis='" + 1 + "']").html()));
+				var x1 = (parseFloat($("td[data-axis='" + 0 + "']").html()));
+				var y1 = (parseFloat($("td[data-axis='" + 1 + "']").html()));
 				var z1 = parseFloat($("td[data-axis='" + 2 + "']").html());
-				var x2 = (300+parseFloat(status.coords.xyz[0].toFixed(2)));
-				var y2 = (295+parseFloat(status.coords.xyz[1].toFixed(2)));
+				var x2 = (parseFloat(status.coords.xyz[0].toFixed(2)));
+				var y2 = (parseFloat(status.coords.xyz[1].toFixed(2)));
 				var z2 = parseFloat(status.coords.xyz[2].toFixed(2));
 				if ((!isNaN(x1) && !isNaN(x2)) && (!isNaN(y1) && !isNaN(y2)) && (!isNaN(z1) && !isNaN(z2)))
 				{
 					if ((x1 != x2 || y1 != y2) && (z1 == z2))
 					{// changer couleur extrudeur
-						$("#layerPreview")[0].innerHTML +="<line class='printed_path' style='stroke:rgb(255,0,0);stroke-width:2'"+
-						"x1='"+ x1 + "' y1='" + y1 + "' x2='" + x2 + "' y2='" + y2 + "'/>"
-						$(".print_head").remove();
-						drawHead({x: x2, y: y2}, 1);
+						
+						liveScene.remove(liveScene.getObjectByName("toolPath"));
+						
+						lastLayer[Math.max(status.currentTool, 0)].push({x1: x1, x2: x2, y1: y1, y2: y2});
+						for(var tool = 0; tool < lastLayer.length; tool++)
+						{
+							var geometry = new THREE.Geometry();
+							for(var i = 0; i < lastLayer[tool].length; i++)
+							{
+									geometry.vertices.push(new THREE.Vector3(lastLayer[tool][i].x1, -lastLayer[tool][i].y1, 1));
+									geometry.vertices.push(new THREE.Vector3(lastLayer[tool][i].x2, -lastLayer[tool][i].y2, 1));
+															}
+							if(Math.min(status.currentTool, 0) === tool)
+							{
+								geometry.vertices.push(new THREE.Vector3(x1, -y1, 1));
+								geometry.vertices.push(new THREE.Vector3(x2, -y2, 1));
+							}
+							var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "hsl(" + (tool>0?(((tool-1)/nbTools)*360):360+(((tool-1)/nbTools)*360))  + ", " + (!tool?'0':'75') + "%, 50%)"}))
+							line.name = "toolPath";
+							liveScene.add(line);
+							
+						}
+						
+						
+							liveScene.remove(liveScene.getObjectByName("toolHead"));
+							var geometry = new THREE.Geometry();
+							drawHead(geometry, {x: x2, y: y2}, status.currentTool);
+							var line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xa0a0a0}))
+							line.name = "toolHead"
+							liveScene.add(line);
+						
 					} else if (z1 != z2){
+						//console.log("new Layer")
 						//redrawBP();
-						$(".printed_path").remove();
+						do {
+							liveScene.remove(liveScene.getObjectByName("toolPath"));
+						} while (liveScene.getObjectByName("toolPath"))
+						lastLayer = [[], [], [], [], [], []];
 					}
 				}
 			}
@@ -1479,12 +1513,6 @@ function updateStatus() {
 					setProgress(progress, T("Processing {0}, {1}% Complete", fileInfo.fileName, progress),
 							(progressText.length > 0) ? progressText.reduce(function(a, b) { return a + ", " + b; }) : "");
 					
-					/*var myFileName =  fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf("/")+1,fileInfo.fileName.lastIndexOf("."))
-					if ((couchePrec != status.currentLayer) && PREVIEW)
-					{
-						getPicture("0:/www/img/GCodePreview/" + myFileName, myFileName + "_" + status.currentLayer+".jpg", $("#layerPreview")[0], 300)
-						couchePrec = status.currentLayer;
-					}*/
 				}
 
 				// Print Chart
@@ -1666,7 +1694,6 @@ function reconnectAfterUpdate() {
 	if ((uploadedDWC || uploadDWCFile != undefined) && location.host != "") {
 		if (sessionPassword != defaultPassword) {
 			connect(sessionPassword, false);
-
 			showConfirmationDialog(T("Reload Page?"), T("You have just updated Duet Web Control. Would you like to reload the page now?"), function() {
 				location.reload();
 			});
@@ -1699,7 +1726,11 @@ function requestFileInfo() {
 				fileInfo = response;
 
 				$("#span_progress_left").html(T("Processing {0}", response.fileName));
-
+				
+				var dirName = response.fileName.substring(response.fileName.lastIndexOf("/")+1, response.fileName.lastIndexOf("."));
+				fileName = dirName + "_bp.jpg"
+				getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
+				
 				$("#dd_size").html(formatSize(response.size));
 				$("#dd_height").html((response.height > 0) ? T("{0} mm", response.height) : T("n/a"));
 				var layerHeight = (response.layerHeight > 0) ? T("{0} mm", response.layerHeight) : T("n/a");
@@ -1859,6 +1890,19 @@ function setOem(oem) {
 
 		$("#img_crosshair").prop("src", "img/crosshair.png");
 		$("#img_calibration_diagram").prop("src", "img/diabase_calibration_diagram.png");
+	} else if (oem == "lynxter") {
+		//$(".diabase").removeClass("hidden");
+		//$(".no-diabase").addClass("hidden");
+		
+		$(".navbar-brand").prop("href", "https://www.lynxter.fr/lynxter-accueil/").prop("target", "_blank");
+		$(".navbar-brand > img").removeClass("hidden").prop("src", "img/logoLynxter.jpg");
+		$(".navbar-brand > img").prop("style", "height: 50px; margin-top: -15px;");
+
+		//$("#table_tools tr[data-heater='cabinet'] > th:first-child > a").text(T("Dry Cabinet"));
+		//$("#table_heaters tr[data-heater='cabinet'] > th:first-child > a").text(T("Dry Cabinet"));
+
+		//$("#img_crosshair").prop("src", "img/crosshair.png");
+		//$("#img_calibration_diagram").prop("src", "img/diabase_calibration_diagram.png");
 	}
 
 	// Update GUI just in case the response was received after the first status response
@@ -2341,11 +2385,9 @@ function setGCodeFileItem(row, size, lastModified, height, firstLayerHeight, lay
 	while (name.includes(" "))
 		name = name.replace(" ", "_");
 	img.id = name;
-	linkCell.find("span").replaceWith(img.outerHTML)//.removeClass("glyphicon-asterisk").addClass("glyphicon-file");
+	linkCell.find("span").replaceWith(img.outerHTML);
 	linkCell.html('<a href="#" class="a-gcode-file">' + linkCell.html() + '</a>');
 	getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
-	//$("#"+name)[0].onmouseenter = function(){this.width = "400"; this.height = "400"};
-	//$("#"+name)[0].onmouseleave = function(){this.width = "40"; this.height = "40"};
 	$("#"+name)[0].classList.add("img_gcode");
 	row.data("size", size);
 	row.data("last-modified", lastModifiedValue);
@@ -2540,7 +2582,8 @@ $("body").on("click", ".a-gcode-directory", function(e) {
 
 $("body").on("click", ".a-gcode-file", function(e) {
 	var file = $(this).closest("tr").data("file");
-	var dirName = file.substring(0, file.lastIndexOf("."));
+	var dirName = file.substring(file.lastIndexOf("/"), file.lastIndexOf("."));
+	$("#modal_confirmation_img")[0].parentNode.style.display = "block";
 	fileName = dirName + "_bp.jpg"
 	getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#modal_confirmation_img")[0], 100);
 	showConfirmationDialog(T("Run G-Code File"), T("Do you want to run <strong>{0}</strong>?", file), function() {
@@ -2552,6 +2595,7 @@ $("body").on("click", ".a-gcode-file", function(e) {
 		} else {
 			sendGCode('M32 "' + currentGCodeDirectory.substring(10) + "/" + file + '"');
 		}
+		getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
 	});
 	e.preventDefault();
 });
@@ -2916,6 +2960,7 @@ $("body").on("click", ".a-macro-directory", function(e) {
 
 $("body").on("click", ".a-macro-file", function(e) {
 	var file = $(this).closest("tr").data("file");
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	showConfirmationDialog(T("Run Macro"), T("Do you want to run <strong>{0}</strong>?", file), function() {
 		sendGCode('M98 P"' + currentMacroDirectory + "/" + file + '"');
 	});
@@ -3813,6 +3858,7 @@ $("#a_context_rename").click(function(e) {
 });
 
 $("#a_context_delete").click(function(e) {
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	if (contextMenuTargets.length == 1) {
 		var file = contextMenuTargets.data("file");
 		if (file != undefined) {
@@ -5033,6 +5079,7 @@ $("#page_settings").on("click", ".btn-select-tool", function(e) {
 });
 
 $("#page_settings").on("click", ".btn-remove-tool", function(e) {
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	var tool = $(this).closest("div.panel-body").data("tool");
 	showConfirmationDialog(T("Delete Tool"), T("Are you sure you wish to remove tool {0}?", tool), function() {
 		sendGCode("M563 P" + tool + " D-1 H-1");
@@ -5295,6 +5342,7 @@ $("#table_calibration_tools").on("click", ".tool-offset-down", function(e) {
 });
 
 $("#table_calibration_tools").on("click", ".tool-calibrate", function(e) {
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	var toolNumber = $(this).parents("tr").data("tool");
 	showConfirmationDialog(T("Calibrate Tool"), T("Before you proceed please make sure that the calibration tool is installed. Continue?"),
 		function() {
@@ -5514,6 +5562,7 @@ $("#btn_baby_up").click(function() {
 });
 
 $("#btn_calibrate_all").click(function() {
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	showConfirmationDialog(T("Calibrate Tool"), T("Before you proceed please make sure that the calibration tool is installed. Continue?"),
 		function() {
 			sendGCode('M98 P"calibrate_all.g"');
@@ -5528,6 +5577,7 @@ $("#btn_cancel").click(function() {
 
 $(".btn-emergency-stop").click(function() {
 	if (settings.confirmStop) {
+		$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 		showConfirmationDialog(T("Emergency STOP"), T("This will turn off everything and perform a software reset.<br/><br/>Are you REALLY sure you want to do this?"), function() {
 			sendGCode("M112\nM999");
 		});
@@ -5865,7 +5915,8 @@ $(".navlink").click(function(e) {
 $("#panel_control_misc label.btn").click(function() {
 	if ($(this).find("input").val() == 1) {		// ATX on
 		sendGCode("M80");
-	} else {									// ATX off
+	} else {
+		$("#modal_confirmation_img")[0].parentNode.style.display = "none";									// ATX off
 		showConfirmationDialog(T("ATX Power"), T("Do you really want to turn off ATX power?<br/><br/>This will turn off all drives, heaters and fans."), function() {
 			sendGCode("M81");
 		});
@@ -7951,6 +8002,7 @@ function saveGCodes() {
 // Apply & Reset settings
 
 $(".btn-reset-settings").click(function(e) {
+	$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 	showConfirmationDialog(T("Reset Settings"), T("Are you sure you want to revert to Factory Settings?"), function() {
 		if (defaultSettings.language != settings.language) {
 			showMessage("info", T("Language has changed"), T("You have changed the current language. Please reload the web interface to apply this change."), 0);
@@ -8946,6 +8998,7 @@ function uploadHasFinished(success) {
 
 		// Ask for firmware/DWC update if it's safe to do
 		else if (lastStatusResponse != undefined && (lastStatusResponse.status == 'I' || lastStatusResponse.status == 'O')) {
+			$("#modal_confirmation_img")[0].parentNode.style.display = "none";
 			// Test for firmware update before we test for a new config file, because a firmware update includes a reset
 			if (uploadFirmwareFile != undefined && uploadDWSFile == undefined && uploadDWSSFile == undefined && uploadDWCFile == undefined) {
 				$("#modal_upload").modal("hide");
@@ -10541,6 +10594,7 @@ $(".color-scheme").click(function(e) {
 	e.preventDefault();
 });
 
+
 /**
  * LineReader
  * https://github.com/mgmeyers/LineReader
@@ -10553,9 +10607,9 @@ var LineReader=function(e){if(!(this instanceof LineReader))return new LineReade
 
 /* img to Blob*/
 function b64toBlob(e,t,n){t=t||"",n=n||512;for(var o=atob(e),r=[],a=0;a<o.length;a+=n){for(var l=o.slice(a,a+n),i=new Array(l.length),s=0;s<l.length;s++)i[s]=l.charCodeAt(s);var c=new Uint8Array(i);r.push(c)}return new Blob(r,{type:t})}
-var savePicture=function(e,t){document.getElementById("myAwesomeForm");var n=e.split(";"),o=n[0].split(":")[1],r=b64toBlob(n[1].split(",")[1],o);var f = fileInput.name.substring(0,fileInput.name.lastIndexOf("."));while(f.includes(" ")||t.includes(" ")){f=f.replace(" ","_");t=t.replace(" ","_");}$.ajax({url:ajaxPrefix+"rr_upload?name=0:/www/img/GCodePreview/"+f+"/"+t+"&time="+encodeURIComponent(timeToStr(new Date)),data:r,type:"POST",contentType:!1,processData:!1,cache:!1,dataType:"json",async:0,error:function(e){console.error(e)},success:function(e){console.log(e)},complete:function(){console.log("Request finished.")}})};
+var savePicture=function(e,t){document.getElementById("myAwesomeForm");var n=e.split(";"),o=n[0].split(":")[1],r=b64toBlob(n[1].split(",")[1],o);var f = fileInput.name.substring(0,fileInput.name.lastIndexOf("."));while(f.includes(" ")||t.includes(" ")){f=f.replace(" ","_");t=t.replace(" ","_");}$.ajax({url:ajaxPrefix+"rr_upload?name=0:/www/img/GCodePreview/"+f+"/"+t+"&time="+encodeURIComponent(timeToStr(new Date)),data:r,type:"POST",contentType:!1,processData:!1,cache:!1,dataType:"json",async:0,error:function(e){console.error(e)},success:function(e){/*console.log(e)*/},complete:function(){console.log("Request finished.")}})};
 
-function getPicture(url, name, pic, size)
+function getPicture(url, name, pic, size, nbTry)
 {
 	while (url.includes(" ") || name.includes(" "))
 	{
@@ -10567,24 +10621,33 @@ function getPicture(url, name, pic, size)
 		{
 			var xhr = new XMLHttpRequest();
 			 xhr.onreadystatechange = function() {
+				 //console.log(name+": "+this.readyState + ", " +this.status)
 			      if (this.readyState == 4 && this.status == 200)
 			      {
+			    	  //console.log(this.response)
 			    	  var res = this.response;
 			          var reader = new window.FileReader();
 			          reader.readAsDataURL(res); 
 			          reader.onloadend = function() {
 			        	  if(pic)
 			        	  {
-			        	  	pic.src = reader.result
+			        	  	pic.src = reader.result;
 			        	  	pic.alt = name;
 			        	  	pic.height = size;
 			        	  	pic.width = size;
 			        	  }
 			          }
 			      }
+				 if (this.readyState == 4 && this.status == 0) {
+					 if (nbTry != 5)
+					{
+						 nbTry = (nbTry?nbTry+1: 1);
+		        		 getPicture(url, name, pic, size, nbTry);
+					}
+				 }
 			 }
 			 xhr.responseType = 'blob';
-			if (data.files.length > 0)
+			if (data.files.length >= 2 )
 			{
 				xhr.open("GET", ajaxPrefix + "rr_download?name=" + url + "/" + name);
 			} else {
@@ -10609,22 +10672,22 @@ function deletePicture(name)
 		{
 			for(var file in data.files)
 			{
-				$.get(ajaxPrefix + "rr_delete?name=" + url + "/" + file, function(data, status){}, false);
+				$.get(ajaxPrefix + "rr_delete?name=" + url + "/" + data.files[file].name, function(data, status){}, false);
 			}
-			$.get(ajaxPrefix + "rr_delete?name=" + url, function(data, status){});
+			$.get(ajaxPrefix + "rr_delete?name=" + url, function(data, status){}, false);
 		}
 	);
 }
 
 /* ======== THREE_SCENE ======== */
 
-//Our Javascript will go here.
 var layStart = 0;
 var layEnd = 100;
- var camera, scene, renderer;
+var previewCamera, previewScene, previewRenderer;
+var liveCamera, liveScene, liveRenderer;
 var strDownloadMime = "image/octet-stream";
 var statsfps;
-var controls;
+var previewControls;
 var needsRedraw = false;
 
 function initScene()
@@ -10635,45 +10698,50 @@ function initScene()
 	{
 		document.body.appendChild( statsfps.dom );
 	}
-	 var saveLink = document.createElement('div');
-        saveLink.style.position = 'absolute';
-        saveLink.style.top = '10px';
-        saveLink.style.width = '100%';
-        saveLink.style.color = 'white !important';
-        saveLink.style.textAlign = 'center';
-        saveLink.innerHTML =
-            '<a href="#" id="saveLink">Save Frame</a>';
-        document.body.appendChild(saveLink);
-        document.getElementById("saveLink").addEventListener('click', saveAsImage);
 	
-	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera( 75, 600 / 600, 0.1, 10000 );
-	//camera = new THREE.OrthographicCamera( -300, 300, 300, -300, 0.1, 1000 );
+	initPreview();
+	initLive();
 	
-	var space = $("#threeDisplay")[0];
-	renderer = new THREE.WebGLRenderer({
-                    preserveDrawingBuffer: true
+	function animate() {
+		statsfps.begin();
+		previewControls.update();
+		requestAnimationFrame( animate );
+		previewRenderer.render( previewScene, previewCamera );
+		liveRenderer.render(liveScene, liveCamera);
+		if (hasGeoToRender)
+			renderLoop();
+		if (needsRedraw)
+			redrawLoop();
+		//light.position.z -= 0.1;
+		statsfps.end();
+	}
+	animate();
+}
+
+function initPreview()
+{
+	previewScene = new THREE.Scene();
+	previewCamera = new THREE.PerspectiveCamera( 75, 600 / 600, 0.1, 10000 );	
+	var previewSpace = $("#threeDisplay")[0];
+	previewRenderer = new THREE.WebGLRenderer({
+                    preserveDrawingBuffer: true,
+                    alpha: true
                 });
-	renderer.setSize( 600, 600 );
+	previewRenderer.setSize( 600, 600 );
 	
-	renderer.shadowMapEnabeled = true;
-	renderer.shadowMap.type = THREE.BasicShadowMap;
-	
-	space.appendChild( renderer.domElement );
-	
+	previewRenderer.shadowMapEnabeled = true;
+	previewRenderer.shadowMap.type = THREE.BasicShadowMap;
+	previewSpace.appendChild( previewRenderer.domElement );	
 	var ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-	scene.add(ambientLight);
+	previewScene.add(ambientLight);
 	
 	var light = new THREE.PointLight( 0xffffff, 1, 600);
 	light.position.set( 0, 295, 0 );
 	light.castShadow = true;
 	light.shadow.camera.near = 0.1;
 	light.shadow.camera.far = 1000
-	scene.add( light );
-	
-    helper = new THREE.PointLightHelper(light, 0.1);
-	scene.add(helper);
-	
+	previewScene.add( light );
+		
 	var geometry = new THREE.CircleGeometry( 180, 30);
 	var material = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 } );
 	var buildPlate = new THREE.Mesh(new THREE.CircleGeometry( 200, 30), new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }));
@@ -10688,62 +10756,148 @@ function initScene()
 	var topCircle = new THREE.Mesh( geometry, topMaterial );
 	topCircle.rotation.x = -Math.PI/2;
 	topCircle.position.y = 600;
-	//scene.add( topCircle );
-	scene.add( buildSurface );
-	scene.add( buildPlate );
+	//previewScene.add( topCircle );
+	previewScene.add( buildSurface );
+	previewScene.add( buildPlate );
 	geometry = new THREE.CylinderGeometry( 200, 200, 600, 32, 1, true, 0, Math.PI );
-	material = new THREE.MeshPhongMaterial({color: 0xe0e0e0, side: THREE.BackSide} );
+	material = new THREE.MeshBasicMaterial({color: 0xe0e0e0, side: THREE.BackSide} );
 	var buildVolume = new THREE.Mesh( geometry, material );
 
 	buildVolume.position.y = 300;
-	scene.add( buildVolume );
+	previewScene.add( buildVolume );
 		
-	controls = new THREE.OrbitControls( camera , $("#threeDisplay")[0]);
+	previewControls = new THREE.OrbitControls( previewCamera , $("#threeDisplay")[0]);
 	
 	var gridPrimeGeo = new THREE.Geometry();
 	var gridSecGeo = new THREE.Geometry();
 	var materPrime = new THREE.LineBasicMaterial({ color: 0x7f7f7f});
 	var materSec = new THREE.LineBasicMaterial({ color: 0xafafaf});
+	
+	prepareGridBPGeoPreview(gridPrimeGeo, gridSecGeo);
+	
+	previewScene.add(new THREE.LineSegments(gridPrimeGeo, materPrime));
+	previewScene.add(new THREE.LineSegments(gridSecGeo, materSec));
+	
+	// previewCamera center
+	previewCamera.position.set(-400, 575, 0);
+	//previewCamera positive
+	//previewCamera.position.set(-100, 150, 100);
+	previewCamera.rotation.set(-Math.PI/2, -1, -Math.PI/2);
+}
+
+function initLive()
+{
+	liveScene = new THREE.Scene();
+	liveCamera = new THREE.OrthographicCamera( -300, 300, 295, -225, 0.1, 10000 );	
+	var liveSpace = $("#liveDisplay")[0];
+	liveRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+	liveRenderer.setSize( 1200, 1040 );
+	
+	liveSpace.appendChild( liveRenderer.domElement );	
+	var geometry = new THREE.CircleGeometry(180, 90);
+	var material = new THREE.MeshBasicMaterial({ color: 0xf0f0f0 } );
+	var buildPlate = new THREE.Mesh(new THREE.CircleGeometry( 225, 90), new THREE.MeshBasicMaterial({ color: 0xe0e0e0 }));
+	//buildPlate.rotation.x = -Math.PI/2;
+	buildPlate.position.z = -0.1;
+	var buildSurface = new THREE.Mesh( geometry, material );
+	//buildSurface.rotation.x = -Math.PI/2;
+	buildSurface.position.z = 1;
+	
+	liveScene.add( buildSurface );
+	liveScene.add( buildPlate );
+		
+	var gridPrimeGeo = new THREE.Geometry();
+	var gridSecGeo = new THREE.Geometry();
+	var materPrime = new THREE.LineBasicMaterial({ color: 0x7f7f7f});
+	var materSec = new THREE.LineBasicMaterial({ color: 0xafafaf});
+	
+	prepareGridBPGeoLive(gridPrimeGeo, gridSecGeo);
+	
+	geometry = new THREE.Geometry();
+	drawHead(geometry, {x: 0, y: 0}, 0);
+	var lineSegments = new THREE.LineSegments(geometry, materSec);
+	lineSegments.name = "toolHead";
+	liveScene.add(lineSegments);
+	
+	var geo = new THREE.Geometry();
+	geo.vertices.push(new THREE.Vector3(-10, 280, 1));
+	geo.vertices.push(new THREE.Vector3(10, 280, 1));
+	geo.vertices.push(new THREE.Vector3(-10, 290, 1));
+	geo.vertices.push(new THREE.Vector3(10, 290, 1));
+	
+
+	geo.vertices.push(new THREE.Vector3(287, -203, 1));
+	geo.vertices.push(new THREE.Vector3(273, -218, 1));
+	geo.vertices.push(new THREE.Vector3(295, -210, 1));
+	geo.vertices.push(new THREE.Vector3(280, -225, 1));
+	
+	geo.vertices.push(new THREE.Vector3(-273, -218, 1));
+	geo.vertices.push(new THREE.Vector3(-287, -203, 1));
+	geo.vertices.push(new THREE.Vector3(-280, -225, 1));
+	geo.vertices.push(new THREE.Vector3(-295, -210, 1));
+	
+	geo.faces.push(new THREE.Face3(0,1,2));
+	geo.faces.push(new THREE.Face3(2,1,3));
+	geo.faces.push(new THREE.Face3(4,5,6));
+	geo.faces.push(new THREE.Face3(6,5,7));
+	geo.faces.push(new THREE.Face3(8,9,10));
+	geo.faces.push(new THREE.Face3(10,9,11));
+	
+		
+	var geoMat = new THREE.MeshBasicMaterial({color: 0xafafaf});
+	var lineSegments = new THREE.Mesh(geo, geoMat);
+	liveScene.add(lineSegments);
+	
+		
+	liveScene.add(new THREE.LineSegments(gridPrimeGeo, materPrime));
+	liveScene.add(new THREE.LineSegments(gridSecGeo, materSec));
+	
+	liveCamera.position.set(0,0, 600);
+}
+	
+
+function prepareGridBPGeoPreview(gridPrime, gridSec)
+{
 	for (var posY = -200; posY < 180; posY += 100)
 	{
 		var miniX = -180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
 		var maxiX =  180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
-		gridPrimeGeo.vertices.push(new THREE.Vector3(miniX, 1, posY));
-		gridPrimeGeo.vertices.push(new THREE.Vector3(maxiX, 1, posY));
-		gridPrimeGeo.vertices.push(new THREE.Vector3(posY, 1, miniX));
-		gridPrimeGeo.vertices.push(new THREE.Vector3(posY, 1, maxiX));
+		gridPrime.vertices.push(new THREE.Vector3(miniX, 1, posY));
+		gridPrime.vertices.push(new THREE.Vector3(maxiX, 1, posY));
+		gridPrime.vertices.push(new THREE.Vector3(posY, 1, miniX));
+		gridPrime.vertices.push(new THREE.Vector3(posY, 1, maxiX));
 		for (var posX = posY + 20; posX < posY + 100; posX += 20)
 		{
 			miniX = -180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
 			maxiX =  180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
-			gridSecGeo.vertices.push(new THREE.Vector3(miniX, 1, posX));
-			gridSecGeo.vertices.push(new THREE.Vector3(maxiX, 1, posX));
-			gridSecGeo.vertices.push(new THREE.Vector3(posX, 1, miniX));
-			gridSecGeo.vertices.push(new THREE.Vector3(posX, 1, maxiX));
+			gridSec.vertices.push(new THREE.Vector3(miniX, 1, posX));
+			gridSec.vertices.push(new THREE.Vector3(maxiX, 1, posX));
+			gridSec.vertices.push(new THREE.Vector3(posX, 1, miniX));
+			gridSec.vertices.push(new THREE.Vector3(posX, 1, maxiX));
 		}
 	}
-	scene.add(new THREE.LineSegments(gridPrimeGeo, materPrime));
-	scene.add(new THREE.LineSegments(gridSecGeo, materSec));
-	
-	// camera center
-	camera.position.set(-400, 575, 0);
-	//camera positive
-	//camera.position.set(-100, 150, 100);
-	camera.rotation.set(-Math.PI/2, -1, -Math.PI/2);
-	
-	function animate() {
-		statsfps.begin();
-		controls.update();
-		requestAnimationFrame( animate );
-		renderer.render( scene, camera );
-		if (hasGeoToRender)
-			renderLoop();
-		if (needsRedraw)
-			redrawLoop();
-		//light.position.z -= 0.1;
-		statsfps.end();
+}
+
+function prepareGridBPGeoLive(gridPrime, gridSec)
+{
+	for (var posY = -200; posY < 180; posY += 100)
+	{
+		var miniX = -180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
+		var maxiX =  180 * Math.sqrt(1 - ((posY/180) * (posY/180)));
+		gridPrime.vertices.push(new THREE.Vector3(miniX, posY, 1));
+		gridPrime.vertices.push(new THREE.Vector3(maxiX, posY, 1));
+		gridPrime.vertices.push(new THREE.Vector3(posY, miniX, 1));
+		gridPrime.vertices.push(new THREE.Vector3(posY, maxiX, 1));
+		for (var posX = posY + 20; posX < posY + 100; posX += 20)
+		{
+			miniX = -180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
+			maxiX =  180 * Math.sqrt(1 - ((posX/180) * (posX/180)));
+			gridSec.vertices.push(new THREE.Vector3(miniX, posX, 1));
+			gridSec.vertices.push(new THREE.Vector3(maxiX, posX, 1));
+			gridSec.vertices.push(new THREE.Vector3(posX, miniX, 1));
+			gridSec.vertices.push(new THREE.Vector3(posX, maxiX, 1));
+		}
 	}
-	animate();
 }
 
 function saveAsImage() {
@@ -10751,7 +10905,7 @@ function saveAsImage() {
 
 	try {
 		var strMime = "image/jpeg";
-		imgData = renderer.domElement.toDataURL(strMime);
+		imgData = previewRenderer.domElement.toDataURL(strMime);
 
 		savePicture(imgData.replace(strMime, strDownloadMime), "test.jpg");
 
@@ -10787,7 +10941,7 @@ function initRedraw()
 	{
 		if(key != "length" )
 		{
-			keys.push(key)
+			keys.push(key);
 		}
 	}
 	for(var layer in pointCloud[keys[0]])
@@ -10806,7 +10960,6 @@ function redrawLoop()
 	if (i == keys.length)
 	{
 		needsRedraw = false;
-		
 		return;
 	}
 	if (lays[lay] != undefined )
@@ -10816,15 +10969,15 @@ function redrawLoop()
 			switch (slicer)
 			{
 				case Slicer.CURA:
-					//redrawScene(keys[i], lays[lay],
+					//redrawpreviewScene(keys[i], lays[lay],
 						//(($("#"+keys[i].toLowerCase()+"_cura")[0].checked) && (lay >= layStart && lay <= layEnd)));
 					break;
 				case Slicer.SIMP:
-					//redrawScene(keys[i], lays[lay],
+					//redrawpreviewScene(keys[i], lays[lay],
 							//(($("#"+keys[i].toLowerCase()+"_simp")[0].checked) && (lay >= layStart && lay <= layEnd)));
 					break;						
 				case Slicer.SLIC:
-					//redrawScene(keys[i], lays[lay],
+					//redrawpreviewScene(keys[i], lays[lay],
 							// (($("#"+keys[i].toLowerCase()+"_slic")[0].checked) && (lay >= layStart && lay <= layEnd)));
 					break;
 			}
@@ -10846,10 +10999,10 @@ function redrawLoop()
 	}
 }
 
-function redrawScene(key, layer, visible)
+function redrawpreviewScene(key, layer, visible)
 {
-	if (scene.getObjectByName(key+"_"+layer))
-		scene.getObjectByName(key+"_"+layer).visible = visible;
+	if (previewScene.getObjectByName(key+"_"+layer))
+		previewScene.getObjectByName(key+"_"+layer).visible = visible;
 }
 
 
@@ -10864,59 +11017,81 @@ Math.degrees = function(radians) {
   return radians * 180 / Math.PI;
 };
 
-function drawHead(pos, tnum)
+function drawHead(geo ,pos, tnum)
 {
 	if (tnum == 1)
 		pos.y -= 20;
 	if (tnum == 3){
-		pos.x += 20*Math.sqrt(3)/2
-		pos.y += 10
+		pos.x += 20*Math.sqrt(3)/2;
+		pos.y += 10;
 	}
 	if (tnum == 2){
-		pos.x -= 20*Math.sqrt(3)/2
-		pos.y += 10
+		pos.x -= 20*Math.sqrt(3)/2;
+		pos.y += 10;
 	}
-	str = ""
-	for(var i = 0; i < 360; i += 60)
+	for(var i = 0; i <= 360; i += 60)
 	{
-		str += (i?", ":"")+(pos.x+(35*Math.cos(Math.radians(i)))) + " " +  (pos.y+(35*Math.sin(Math.radians(i))));
+		geo.vertices.push(new THREE.Vector3((pos.x+(35*Math.cos(Math.radians(i)))),-(pos.y+(35*Math.sin(Math.radians(i)))), 1));
+		if (i!= 0)
+			geo.vertices.push(new THREE.Vector3((pos.x+(35*Math.cos(Math.radians(i)))),-(pos.y+(35*Math.sin(Math.radians(i)))), 1));			
 		if(i == 0)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="587" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(287, -203, 1));
 		else if(i == 60)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="573" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(273, -218, 1));
 		else if(i == 120)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="27" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(-273, -218, 1));
 		else if(i == 180)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="13" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(-287, -203, 1));
 		else if(i == 240)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="290" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(-10, 280, 1));
 		else if(i == 300)
-			$("#layerPreview")[0].innerHTML += '<line class="print_head" x1="310" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			geo.vertices.push(new THREE.Vector3(10, 280, 1));
+		geo.vertices.push(new THREE.Vector3((pos.x+(35*Math.cos(Math.radians(i)))),-(pos.y+(35*Math.sin(Math.radians(i)))), 1));
 	}
 	//console.log(str)
-	$("#layerPreview")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="lightgray" style="fill: none"></polygon>'
+	
+	if(liveScene.getObjectByName("toolHead1"))
+		liveScene.remove(liveScene.getObjectByName("toolHead1"));
+	if(liveScene.getObjectByName("toolHead2"))
+		liveScene.remove(liveScene.getObjectByName("toolHead2"));
+	if(liveScene.getObjectByName("toolHead3"))
+		liveScene.remove(liveScene.getObjectByName("toolHead3"));
+
+	geometry = new THREE.Geometry();
 	var posT1 = {};
 	posT1.x = pos.x + (20*Math.cos(Math.radians(90)));
 	posT1.y = pos.y + (20*Math.sin(Math.radians(90)));
-	drawTool(posT1, "red");
+	drawTool(posT1, geometry);
+	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xe00000}));
+	tHead.name = "toolHead1";
+	liveScene.add(tHead);
+
+	geometry = new THREE.Geometry();
 	var posT3 = {};
 	posT3.x = pos.x + (20*Math.cos(Math.radians(-150)));
 	posT3.y = pos.y + (20*Math.sin(Math.radians(-150)));
-	drawTool(posT3, "blue");
+	drawTool(posT3, geometry);
+	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0x0000e0}))
+	tHead.name = "toolHead3";
+	liveScene.add(tHead);
+	
+	geometry = new THREE.Geometry();
 	pos.x+=(20*Math.cos(Math.radians(-30)));
 	pos.y+=(20*Math.sin(Math.radians(-30)));
-	drawTool(pos, "green");
+	drawTool(pos, geometry);
+	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0x00e000}))
+	tHead.name = "toolHead2";
+	liveScene.add(tHead);
 }
 
-function drawTool(pos, col)
+function drawTool(pos, geo)
 {
-	str = ""
-	for(var i = 0; i < 360; i += 60)
-	{
-		str += (i?", ":"")+(pos.x+(Math.cos(Math.radians(i)))) + " " +  (pos.y+(Math.sin(Math.radians(i))));
+	for(var i = 0; i <= 360; i += 60){
+		geo.vertices.push(new THREE.Vector3((pos.x+(2*Math.cos(Math.radians(i)))), -(pos.y+(2*Math.sin(Math.radians(i)))), 1));
+		if (i!= 0)
+			geo.vertices.push(new THREE.Vector3((pos.x+(2*Math.cos(Math.radians(i)))), -(pos.y+(2*Math.sin(Math.radians(i)))), 1));
 	}
-	//console.log(str)
-	$("#layerPreview")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="'+col+'" style="fill: none"></polygon>'
+	geo.vertices.push(new THREE.Vector3((pos.x+(2*Math.cos(Math.radians(0)))), -(pos.y+(2*Math.sin(Math.radians(0)))), 1));
 }
 
 function redrawBP(){
@@ -10950,12 +11125,13 @@ function redrawBP(){
 		}
 	}
 }
+/*
 setTimeout( function(){
 	redrawBP()
 	drawHead({x: 300, y: 295});
 }
 		, 2000);
-
+*/
 /* ======== GCODE_READER ======== */
 
 var instructionPos = 0;
@@ -10973,7 +11149,7 @@ var gcodeLayers = [];
 var gcodeLayer = {lBBox : {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}},points: []};
 var zLayer = 0;
 var zPrevLayer = 0;
-var lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, t: "Unknown"};
+var lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, w: "Unknown", t: 0};
 var relative = false;
 var startLayer = 0;
 var relativeExtrude = false;
@@ -10982,7 +11158,7 @@ var boundingBox = {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-1000
 
 window.onload = function() {
 	lr = new LineReader({chunkSize: 512	});
-	$("#read").click(function(){lectDonnees (document.getElementById('fileInput').files[0])})
+	$("#read").click(function(){lectDonnees (document.getElementById('fileInput').files[0])});
 };
 
 function lectDonnees() {
@@ -10996,7 +11172,7 @@ function lectDonnees() {
 		{
 			for(var gcodeLayer in pointCloud[key])
 			{
-				scene.remove(scene.getObjectByName(key+"_"+gcodeLayer));
+				previewScene.remove(previewScene.getObjectByName(key+"_"+gcodeLayer));
 			}
 		}
 	}
@@ -11022,7 +11198,7 @@ function lectDonnees() {
 	boundingBox = {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}};
 	gcodeLayers = [];
 	gcodeLayer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
-	lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, t:"Unknown"};
+	lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, w:"Unknown", t: 0};
 	relativeExtrude = false;
 	extruding = false;
 	lr.on('line', function(line, next) {
@@ -11069,10 +11245,10 @@ function lectDonnees() {
 		parseRows[parsedFileCount].find(".progress-bar").removeClass("progress-bar-info progress-bar-warning").addClass( "progress-bar-success").css("width", "100%");
 		parseRows[parsedFileCount].find(".progress-bar > span").text( "100 %");
 
-		// Go on with upload logic if we're still busy
+		// Go on with parse logic if we're still busy
 		parsedFileCount++;
 		if (parseFiles.length > parsedFileCount) {
-			// Upload the next file
+			// Parse the next file
 			lectDonnees();
 		} 
 	});
@@ -11084,7 +11260,7 @@ function lectDonnees() {
 function parseGCode(line)
 {
 	var cmdLine = line.replace(/;.*$/, '').trim(); // Remove comments
-	var comLine = ""
+	var comLine = "";
 	if (line.indexOf(";") > -1)
 		comLine = line.replace(/[a-zA-Z0-9| |.|-]*[;]/, '').trim();
 	if (cmdLine)
@@ -11200,7 +11376,7 @@ function initRender()
 	{
 		if(key != "length" )
 		{
-			keys.push(key)
+			keys.push(key);
 		}
 	}
 	for(var gcodeLayer in pointCloud[keys[0]])
@@ -11218,48 +11394,47 @@ function initRender()
 		{
 			for(var gcodeLayer in pointCloud[key])
 			{
-				scene.remove(scene.getObjectByName(key+"_"+gcodeLayer));
+				previewScene.remove(previewScene.getObjectByName(key+"_"+gcodeLayer));
 			}
 		}
 	}
 	
-	if(scene.getObjectByName("bbox"))
+	if(previewScene.getObjectByName("bbox"))
 	{
-		scene.remove(scene.getObjectByName("bbox"))
+		previewScene.remove(previewScene.getObjectByName("bbox"));
 	}
 	var geo = new THREE.Geometry();
 	// bottom bbox
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
 	// sides bbox
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
-	
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
 	//top bbox
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
-	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
+	geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
 	
 	var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
 	bbox.name = "bbox";
-	scene.add(bbox)
+	previewScene.add(bbox);
 	newStatus = parseRows[parsedFileCount].find("#status");
 }
 
@@ -11275,12 +11450,12 @@ function renderLoop()
 		}, 1000);
 		var imgData, imgNode;
 		try {
-			camera.position.set(-400, 575, 0);
-			controls.target.set(0, 300, 0);
-			controls.update();
-			renderer.render( scene, camera );
+			previewCamera.position.set(-400, 575, 0);
+			previewControls.target.set(0, 300, 0);
+			previewControls.update();
+			previewRenderer.render( previewScene, previewCamera );
 			var strMime = "image/jpeg";
-			imgData = renderer.domElement.toDataURL(strMime);
+			imgData = previewRenderer.domElement.toDataURL(strMime);
 			savePicture(imgData.replace(strMime, strDownloadMime), fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_bp.jpg");
 			
 			var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
@@ -11290,11 +11465,11 @@ function renderLoop()
 			var length = boundingBox.max.y - boundingBox.min.y;
 			var height = boundingBox.max.z - boundingBox.min.z;
 			dFromC = 3/5*Math.sqrt(width*width+length*length);
-			controls.object.position.set(-centerX+dFromC*Math.cos(Math.PI/4), 4/5*(centerZ+Math.max(width, length, height)), centerY+dFromC*Math.sin(Math.PI/4));
-			controls.target.set(-centerX, centerZ, centerY);
-			controls.update();
-			renderer.render(scene, camera);
-			imgData = renderer.domElement.toDataURL(strMime);
+			previewControls.object.position.set(-centerX+dFromC*Math.cos(Math.PI/4), 4/5*(centerZ+Math.max(width, length, height)), centerY+dFromC*Math.sin(Math.PI/4));
+			previewControls.target.set(-centerX, centerZ, centerY);
+			previewControls.update();
+			previewRenderer.render(previewScene, previewCamera);
+			imgData = previewRenderer.domElement.toDataURL(strMime);
 			savePicture(imgData.replace(strMime, strDownloadMime), fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_ico.jpg");
 		} catch (e) {
 			console.error(e);
@@ -11306,7 +11481,7 @@ function renderLoop()
 	{
 		var start = new Date();
 		do {
-			renderGeo(keys[i], lays[lay])
+			renderGeo(keys[i], lays[lay]);
 			lay ++;
 		}while ((new Date() - start < 50) && (lays[lay] != undefined ))
 	} else if (i < keys.length)
@@ -11361,17 +11536,17 @@ function renderGeo(key, gcodeLayer)
 			new THREE.BufferGeometry().fromGeometry(pointCloud[key][gcodeLayer])
 			, meshMaterial )
 			: new THREE.LineSegments(pointCloud[key][gcodeLayer]
-			, pointMaterial ))
+			, pointMaterial ));
 		} else {
 			threeDee =  new THREE.LineSegments(pointCloud[key][gcodeLayer]
-			, pointMaterial )
+			, pointMaterial );
 		}
 		if (key == "MOVE")
 			threeDee.visible = false;
 		threeDee.castShadow = true;
 		threeDee.receiveShadow = true;
 		threeDee.name = key+"_"+gcodeLayer;
-		scene.add( threeDee );
+		previewScene.add( threeDee );
 	}
 }
 
@@ -11408,8 +11583,8 @@ function extractGCode(args)
 				extruding = (lastPos.e < (relativeExtrude? lastPos.e + args.e : args.e));
 			if (zLayer != lastPos.z && extruding)
 			{
-				zPrevLayer = zLayer
-				zLayer = lastPos.z
+				zPrevLayer = zLayer;
+				zLayer = lastPos.z;
 				
 				if(curLay === undefined)
 				{
@@ -11421,68 +11596,68 @@ function extractGCode(args)
 					/* ====== SHOW BOUNDING BOX ====== */
 					if (gcodeLayers[curLay-1] || gcodeLayers[curLay] || ((slicer == undefined || slicer == Slicer.SLIC) && nbLayers > 0))
 					{
-						if (!scene.getObjectByName("bbox"))
+						if (!previewScene.getObjectByName("bbox"))
 						{
 							var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
 							var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
 							var width = boundingBox.max.x - boundingBox.min.x;
 							var length = boundingBox.max.y - boundingBox.min.y;
-							controls.object.position.set(-centerX, 0,centerY)
+							previewControls.object.position.set(-centerX, 0,centerY);
 							if (nbLayers && layHeight)
-								controls.object.position.y = (nbLayers*layHeight)
+								previewControls.object.position.y = (nbLayers*layHeight);
 						}
-						scene.remove(scene.getObjectByName("bbox"))
+						previewScene.remove(previewScene.getObjectByName("bbox"));
 						var geo = new THREE.Geometry();
 						// bottom bbox
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
 						
 						// sides bbox
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.min.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
 						
 						//top bbox
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y))
-						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y))
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.max.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.max.x, boundingBox.max.z, boundingBox.min.y));
+						geo.vertices.push(new THREE.Vector3(-boundingBox.min.x, boundingBox.max.z, boundingBox.min.y));
 						
 						var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
 						bbox.name = "bbox";
-						scene.add(bbox)
+						previewScene.add(bbox);
 						
 						var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
 						var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
-						camera.position.set(-centerX, 0,centerY)
+						previewCamera.position.set(-centerX, 0,centerY);
 						var width = boundingBox.max.x - boundingBox.min.x;
 						var length = boundingBox.max.y - boundingBox.min.y;
-						controls.target.x = -centerX;
-						controls.target.z =  centerY;
+						previewControls.target.x = -centerX;
+						previewControls.target.z =  centerY;
 						if (curLay!=undefined && layHeight)
 						{
-							controls.object.position.y =  4/6*Math.max(width, length)+(curLay*layHeight)
-							controls.target.y = (boundingBox.max.z + boundingBox.min.z)/2;
+							previewControls.object.position.y =  4/6*Math.max(width, length)+(curLay*layHeight);
+							previewControls.target.y = (boundingBox.max.z + boundingBox.min.z)/2;
 						} else {
-							controls.object.position.y = 4/6*Math.max(width, length)+(lastPos.z);
-							controls.target.y = (boundingBox.max.z + boundingBox.min.z)/2;
+							previewControls.object.position.y = 4/6*Math.max(width, length)+(lastPos.z);
+							previewControls.target.y = (boundingBox.max.z + boundingBox.min.z)/2;
 						}
-						controls.update();
+						previewControls.update();
 					}
 					nbKey = 0;
 					for (var key in pointCloud)
@@ -11493,21 +11668,21 @@ function extractGCode(args)
 								id.push(i);
 						var pt = id.length;
 						if (!SHOW_PREV && !SHOW_ALL) {
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])));
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])));
-						}else if (scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])))
-							scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])).material.color = {r:0, g:0, b:0};
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])));
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])));
+						}else if (previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])))
+							previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-2:id[pt-2])).material.color = {r:0, g:0, b:0};
 						if (!SHOW_MOINS_2 && !SHOW_ALL){
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])));
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])));
-						} else if (scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])))
-							scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])).material.color =  {r:0.25, g:0.25, b:0.25};
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])));
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])));
+						} else if (previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])))
+							previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-3:id[pt-3])).material.color =  {r:0.25, g:0.25, b:0.25};
 						if (!SHOW_ALL){
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])));
-							scene.remove(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])));
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])));
+							previewScene.remove(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])));
 							}
-						else if	(scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])))
-							scene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])).material.color =  {r:0.5, g:0.5, b:0.5};
+						else if	(previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])))
+							previewScene.getObjectByName( key+"_"+(curLay!=undefined?curLay-4:id[pt-4])).material.color =  {r:0.5, g:0.5, b:0.5};
 						if (pointCloud[key][(curLay!=undefined?curLay-1:id[pt-1])] != undefined)
 						{
 							nbKey++;
@@ -11534,15 +11709,15 @@ function extractGCode(args)
 									new THREE.BufferGeometry().fromGeometry(pointCloud[key][(curLay!=undefined?curLay-1:id[pt-1])])
 									, meshMaterial )
 									: new THREE.LineSegments(pointCloud[key][(curLay!=undefined?curLay-1:id[pt-1])]
-									, pointMaterial ))
+									, pointMaterial));
 							} else {
 								threeDee =  new THREE.LineSegments(pointCloud[key][(curLay!=undefined?curLay-1:id[pt-1])]
-								, pointMaterial )
+								, pointMaterial);
 							}
 							threeDee.castShadow = true;
 							threeDee.receiveShadow = true;
 							threeDee.name = key+"_"+((curLay!=undefined?curLay-1:id[pt-1]));
-							scene.add( threeDee );
+							previewScene.add( threeDee );
 						}
 						i++;
 					}
@@ -11551,10 +11726,10 @@ function extractGCode(args)
 					{
 						var imgData, imgNode;
 						try {
-							controls.update();
-							renderer.render( scene, camera );
+							previewControls.update();
+							previewRenderer.render( previewScene, previewCamera );
 							var strMime = "image/jpeg";
-							imgData = renderer.domElement.toDataURL(strMime);
+							imgData = previewRenderer.domElement.toDataURL(strMime);
 							savePicture(imgData, fileInput.name.substring(0,fileInput.name.lastIndexOf("."))+"_"+(curLay-1)+".jpg");
 						} catch (e) {
 							console.error(e);
@@ -11587,20 +11762,20 @@ function extractGCode(args)
 					}
 					point_start.x = -lastPos.x;
 					point_start.y = lastPos.z; //-y2;
-					point_start.z = lastPos.y//lastPos.z;
+					point_start.z = lastPos.y;//lastPos.z;
 					
 					point_end.x = -x2;
 					point_end.y = lastPos.z; //-y2;
-					point_end.z = y2//lastPos.z;
+					point_end.z = y2;//lastPos.z;
 					if (fileSize < 10*1024*1024)
 					{
 						setPoly(point_start, point_end);
 					} else {
-						pointCloud[lastPos.t][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_start );
-						pointCloud[lastPos.t][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_end );
+						pointCloud[lastPos.w][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_start );
+						pointCloud[lastPos.w][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_end );
 					}
 					
-				} else {
+				}/* else {
 					point_start.x = -lastPos.x;
 					point_start.y = lastPos.z; //-y2;
 					point_start.z = lastPos.y//lastPos.z;
@@ -11615,7 +11790,7 @@ function extractGCode(args)
 					}
 					moves[(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_start );
 					moves[(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_end );
-				}
+				}*/
 			}
 			
 			if (args.x)
@@ -11645,7 +11820,7 @@ function extractGCode(args)
 			}
 			if (args.e)
 			{
-				lastPos.e = (relativeExtrude? lastPos.e + args.e : args.e)
+				lastPos.e = (relativeExtrude? lastPos.e + args.e : args.e);
 			}
 			if (args.f)
 				lastPos.f = args.f;
@@ -11653,12 +11828,13 @@ function extractGCode(args)
 			if(args.x || args.y)
 			{
 				var tmpPos ={};
-				tmpPos.x = lastPos.x
-				tmpPos.y = lastPos.y
-				tmpPos.z = lastPos.z
-				tmpPos.e = lastPos.e
-				tmpPos.f = lastPos.f
-				tmpPos.t = lastPos.t
+				tmpPos.x = lastPos.x;
+				tmpPos.y = lastPos.y;
+				tmpPos.z = lastPos.z;
+				tmpPos.e = lastPos.e;
+				tmpPos.f = lastPos.f;
+				tmpPos.w = lastPos.w;
+				tmpPos.t = lastPos.t;
 				gcodeLayer.points.push(tmpPos);
 			}
 			break;
@@ -11691,13 +11867,13 @@ function extractGCode(args)
 			
 		case "G90":
 			if(DEBUG)
-				console.log("Absolute positioning")
+				console.log("Absolute positioning");
 			relative = false;
 			break;
 		
 		case "G91":
 			if(DEBUG)
-				console.log("Relative positioning")
+				console.log("Relative positioning");
 			relative = true;
 			break;
 			
@@ -11721,34 +11897,34 @@ function extractGCode(args)
 		
 		case "M82":
 			if(DEBUG)
-				console.log("Absolute extruder")
+				console.log("Absolute extruder");
 			relativeExtrude = false;
 			break;
 		
 		case "M83":
 		if(DEBUG)
-			console.log("Relative extruder")
+			console.log("Relative extruder");
 			relativeExtrude = true;
 			break;
 		
 		case "M84":
 			if(DEBUG)
-				console.log("Steppers off")
+				console.log("Steppers off");
 			break;
 		
 		case "M104":		
 			if(DEBUG)
-				console.log("Extruder set to "+args.s+"°C")
+				console.log("Extruder set to "+args.s+"°C");
 			break;
 		
 		case "M106":
 			if(DEBUG && false)
-				console.log("Fan " + (args.p?args.p+" ":"")+(args.s?"set to: " +args.s:"On"))
+				console.log("Fan " + (args.p?args.p+" ":"")+(args.s?"set to: " +args.s:"On"));
 			break;
 			
 		case "M107":
 			if(DEBUG)
-				console.log("Fan off")
+				console.log("Fan off");
 			break;
 			
 		case "M109":
@@ -11761,7 +11937,7 @@ function extractGCode(args)
 				if(args.p || args.h || args.c)
 					console.log("wait for "+(args.p? "Tool "+args.p+" ":"")+(args.h?"Extruder "+args.h+" ":"")+(args.c?"Chamber "+args.c+" ":"")+"to reach it's target temperature");
 				else
-					console.log("wait for All to reach their target temperature")
+					console.log("wait for All to reach their target temperature");
 			break;
 			
 		case "M117":
@@ -11769,22 +11945,22 @@ function extractGCode(args)
 		
 		case "M140":
 			if(DEBUG)
-				console.log("Bed set to "+args.s+"°C")
+				console.log("Bed set to "+args.s+"°C");
 			break;
 			
 		case "M141":
 			if(DEBUG)
-				console.log("Chamber set to "+args.s+"°C")
+				console.log("Chamber set to "+args.s+"°C");
 			break;
 		
 		case "M190":
 			if(DEBUG)
-				console.log("Wait for bed to reach "+args.s+"°C")
+				console.log("Wait for bed to reach "+args.s+"°C");
 			break;
 			
 		case "M191":
 			if(DEBUG)
-				console.log("Wait for chamber to reach "+args.s+"°C")
+				console.log("Wait for chamber to reach "+args.s+"°C");
 			break;
 			
 		/* ====== T Codes ====== */
@@ -11793,23 +11969,26 @@ function extractGCode(args)
 				console.log("Tool 0 selected");
 				console.log(extruders[0]);
 			}
-				extWidth = extruders[0].width;
+			extWidth = extruders[0].width;
+			lastPos.t = 0;
 			break;
 		
 		case "T1":
 			if(DEBUG){
 				console.log("Tool 1 selected");
 				console.log(extruders[1]);
-	}
-				extWidth = extruders[1].width;
+			}
+			extWidth = extruders[1].width;
+			lastPos.t = 1;	
 			break;
 			
 		case "T2":
 			if(DEBUG){
 				console.log("Tool 2 selected");
 				console.log(extruders[2]);
-}
-				extWidth = extruders[2].width;
+			}
+			extWidth = extruders[2].width;
+			lastPos.t = 2;
 			break;
 		
 		case "T3":
@@ -11817,7 +11996,8 @@ function extractGCode(args)
 				console.log("Tool 3 selected");
 				console.log(extruders[3]);
 			}
-				extWidth = extruders[3].width;
+			extWidth = extruders[3].width;
+			lastpos.t = 3;
 			break;
 			
 		case "T4":
@@ -11825,7 +12005,8 @@ function extractGCode(args)
 				console.log("Tool 4 selected");
 				console.log(extruders[4]);
 			}
-				extWidth = extruders[4].width;
+			extWidth = extruders[4].width;
+			lastpos.t = 4;
 			break;
 		
 		case "T5":
@@ -11833,14 +12014,13 @@ function extractGCode(args)
 				console.log("Tool 5 selected");
 				console.log(extruders[5]);
 			}
-				extWidth = extruders[5].width;
+			extWidth = extruders[5].width;
+			lastpos.t = 5;
 			break;
 			
 		default :
-			if(DEBUG){
 			console.log("unknown command: "+args.cmd);
 			console.log(args);
-		}
 			break;
 	}
 }
@@ -11853,7 +12033,7 @@ var nbLayers = 0;
 var layHeight = 0;
 var curLay;
 var extruders = [];
-var extruder = {name: "", number: undefined, diameter: undefined, width: undefined, primary: false}
+var extruder = {name: "", number: undefined, diameter: undefined, width: undefined, primary: false};
 var extWidth = 0.4;
 
 function decodeCuraCom(args)
@@ -11883,7 +12063,7 @@ function decodeCuraCom(args)
 		case "TYPE":
 			if(DEBUG)
 				console.log("wall type: " + args[1]);
-			lastPos.t = args[1];
+			lastPos.w = args[1];
 			break;
 		case "TIME_ELAPSED":
 			if(DEBUG)
@@ -11943,7 +12123,7 @@ function parseSimpCom(args)
 		if (args[0] && args[0].includes('Z = '))
 		{
 			var z = args[0];
-			args[0] = "Z"
+			args[0] = "Z";
 			args.zHeight = z.substring(z.lastIndexOf(' ')+1);
 			//console.log(args);
 		}
@@ -11961,7 +12141,7 @@ function parseSimpCom(args)
 			var value = parseFloat(tokens[token].substring(1));
 			args[key] = value;
 		}
-		console.log(args);
+		//console.log(args);
 	}
 	
 	switch (args.cmd)
@@ -11973,47 +12153,47 @@ function parseSimpCom(args)
 		case "bridge":
 			if(DEBUG)
 				console.log("wall type: " + "BRIDGE");
-			lastPos.t = "BRIDGE";
+			lastPos.w = "BRIDGE";
 			break;
 		case "gap fill":
 			if(DEBUG)
 				console.log("wall type: " + "GAP_FILL");
-			lastPos.t = "GAP_FILL";
+			lastPos.w = "GAP_FILL";
 			break;
 		case "skirt":
 			if(DEBUG)
 				console.log("wall type: " + "SKIRT");
-			lastPos.t = "SKIRT";
+			lastPos.w = "SKIRT";
 			break;
 		case "infill":
 			if(DEBUG)
 				console.log("wall type: " + "INFILL");
-			lastPos.t = "INFILL";
+			lastPos.w = "INFILL";
 			break;
 		case "inner perimeter":
 			if(DEBUG)
 				console.log("wall type: " + "INNER_PERIMETER");
-			lastPos.t = "INNER_PERIMETER";
+			lastPos.w = "INNER_PERIMETER";
 			break;
 		case "outer perimeter":
 			if(DEBUG)
 				console.log("wall type: " + "OUTER_PERIMETER" );
-			lastPos.t = "OUTER_PERIMETER";
+			lastPos.w = "OUTER_PERIMETER";
 			break;
 		case "solid layer":
 			if(DEBUG)
 				console.log("wall type: " + "SOLID_LAYER");
-			lastPos.t = "SOLID_LAYER";
+			lastPos.w = "SOLID_LAYER";
 			break;
 		case "support":
 			if(DEBUG)
 				console.log("wall type: " + "SUPPORT");
-			lastPos.t = "SUPPORT";
+			lastPos.w = "SUPPORT";
 			break;
 		case "dense support":
 			if(DEBUG)
 				console.log("wall type: " + "DENSE_SUPPORT");
-			lastPos.t = "DENSE_SUPPORT";
+			lastPos.w = "DENSE_SUPPORT";
 			break;
 			
 		/* ====== LAYERS ====== */
@@ -12035,9 +12215,9 @@ function parseSimpCom(args)
 		/* ====== TOOLS PARAMETERS ====== */
 		case "tool":
 			if (layHeight === undefined)
-				layHeight = args.H
+				layHeight = args.H;
 			if (extWidth === undefined)
-				extWidth = args.W
+				extWidth = args.W;
 			break;
 		case "extruderName":
 			var i = 0;

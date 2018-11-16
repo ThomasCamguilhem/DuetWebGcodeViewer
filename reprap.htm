@@ -55,6 +55,7 @@
 
 				<div class="list-group">
 					<a class="navlink list-group-item" href="#" data-target="filaments"><span class="glyphicon glyphicon-cd"></span> Filaments <span class="glyphicon glyphicon-refresh span-refresh-filaments hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="profiles"><span class="glyphicon glyphicon-cd"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 					<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 				</div>
@@ -865,6 +866,7 @@
 
 							<div class="list-group">
 								<a class="navlink list-group-item" href="#" data-target="filaments"><span class="glyphicon glyphicon-cd"></span> Filaments <span class="glyphicon glyphicon-refresh span-refresh-filaments hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="profiles"><span class="glyphicon glyphicon-eject" style="transform: rotate(180deg);"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 								<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 							</div>
@@ -1544,42 +1546,41 @@
 												<h2 id="status"></h2>
 												<div id="loadingBar" style="height: 25px; width: 600px; border: 1px solid black;"><div id="loadedBar" style="height: 100%; width: 0%; background-color: #007000; color: #ffffff;"></div>
 												</div><p id="eta"></p><div id="threeDisplay" style="height: 400px; width: 400px; "></div></div>
-												<div style="width: 600px; height: 520px; overflow: hidden">
-													<svg id="layerPreview" alt="preview layer" width="600" height="520" onmouseenter="zoomIn()" onmouseleave="zoomOut()" onmousemove="centerSvg(event)" onmousewheel="zoomSvg(event)"><circle cx="200" cy="200" r="180" stroke="gray" stroke-width="1" fill="rgb(250,250,250)"></circle>
-													</svg>
-													<script>
-													var zoomLevel = 2.2;
-													function zoomIn()
-													{														
-															$("#layerPreview")[0].style.transform = "scale("+ (zoomLevel) +")";
-													}
-													function zoomOut()
-													{														
-															$("#layerPreview")[0].style.transform = "scale("+1+")";
-													}
-													function centerSvg(event)
+											<div style="width: 600px; height: 520px; overflow: hidden; display: inline-block"  onmouseenter="zoomIn()" onmouseleave="zoomOut()" onmousemove="centerSvg(event)" onmousewheel="zoomSvg(event)" onwheel="zoomSvg(event)">
+												<div id="liveDisplay" style="width: 600px; height: 520px; transform: scale(0.5); transform-origin: 0% 0%"></div>
+												<script>
+												var zoomLevel = 2;
+												function zoomIn()
+												{														
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel) +")";
+												}
+												function zoomOut()
+												{														
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+1+")";
+												}
+												function centerSvg(event)
+												{
+													var cX = (event.offsetX)/12;
+													var cY = (event.offsetY)/10.4;
+													//console.log("X = " + cX + "%")
+													//console.log("Y = " + cY + "%")
+													$("#liveDisplay")[0].firstElementChild.style["transform-origin"] = cX + "% " + cY + "%";
+												}
+												
+												function zoomSvg(event)
+												{
+													var  dir = event.deltaY;
+													var fast = event.shiftKey
+													if ((dir < 0) && (zoomLevel < 4)) // forward
 													{
-														var cX = event.offsetX/6;
-														var cY = event.offsetY/5.2;
-														//console.log("X = " + cX + "%")
-														//console.log("Y = " + cY + "%")
-														$("#layerPreview")[0].style["transform-origin"] = cX + "% " + cY + "%";
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel *= 1.1) +")";
+													} else if ((dir > 0) && (zoomLevel > 1)) {
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel /= 1.1) +")";
 													}
-													
-													function zoomSvg(event)
-													{
-														var  dir = event.deltaY;
-														var fast = event.shiftKey
-														if ((dir < 0) && (zoomLevel < 4)) // forward
-														{
-															$("#layerPreview")[0].style.transform = "scale("+ (zoomLevel *= 1.1) +")";
-														} else if ((dir > 0) && (zoomLevel > 1)) {
-															$("#layerPreview")[0].style.transform = "scale("+ (zoomLevel /= 1.1) +")";
-														}
-														event.preventDefault();
-													}
-													</script>
-												</div>
+													event.preventDefault();
+												}
+												</script>
+											</div>
 										</div>
 									</div>
 
@@ -1668,6 +1669,9 @@
 											<span>File Information</span>
 										</div>
 										<div class="panel-body">
+											<div style="overflow: hidden;"> 
+												<img id="livePreview" style="position: relative; left: -20px">
+											</div>
 											<dl>
 												<dt>Size:</dt>
 												<dd id="dd_size">n/a</dd>
@@ -2149,6 +2153,45 @@
 											<tr>
 												<th><input type="checkbox"></th>
 												<th><a href="#" data-attribute="filament">Filament Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Profiles -->
+						<div id="page_profiles" class="page">
+							<div class="row">
+								<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_profile">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Profiles Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more profile configurations (drag&amp;drop is supported as well)" data-type="profile" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_profile" title="Create a new profile configuration"><span class="glyphicon glyphicon-plus"></span> Create new profile</button>
+											</td>
+										</tr>
+									</table>
+
+									<h1 class="text-center text-muted">Connect to your Duet to display profiles</h1>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_profiles">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="profile">Profile Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
 												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
 											</tr>
 										</thead>
@@ -3188,7 +3231,9 @@
 						<h4 class="modal-title"><!-- see JS--></h4>
 					</div>
 					<div class="modal-body">
-						<img id="modal_confirmation_img" class="img_confirmation"/><p><!-- see JS --></p>
+						<div style="width:100px; height:100px; overflow: hidden"
+						onmouseenter="this.style.width='200px'; this.style.height='200px'" onmouseleave="this.style.width='100px'; this.style.height='100px'">
+						<img id="modal_confirmation_img" class="img_confirmation" onmousemove=" this.style['transform-origin'] = (event.offsetX*0.8) +'% ' + (event.offsetY*0.8) + '%';"/></div><p><!-- see JS --></p>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Yes</button>

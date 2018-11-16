@@ -96,7 +96,7 @@ function extractGCode(args)
 						
 						var bbox = new THREE.LineSegments(geo, new THREE.LineBasicMaterial());
 						bbox.name = "bbox";
-						scene.add(bbox)
+						scene.add(bbox);
 						
 						var centerX = (boundingBox.max.x + boundingBox.min.x)/2;
 						var centerY = (boundingBox.max.y + boundingBox.min.y)/2;
