@@ -950,32 +950,32 @@ function updateStatus() {
 					if ((x1 != x2 || y1 != y2) && (z1 == z2))
 					{// changer couleur extrudeur
 						
-						liveScene.remove(liveScene.getObjectByName("toolPath"));
+						do {
+							liveScene.remove(liveScene.getObjectByName("toolPath"));
+						} while (liveScene.getObjectByName("toolPath"))
 						
 						lastLayer[Math.max(status.currentTool, 0)].push({x1: x1, x2: x2, y1: y1, y2: y2});
 						for(var tool = 0; tool < lastLayer.length; tool++)
 						{
 							var geometry = new THREE.Geometry();
-							for(var i = 0; i < lastLayer[tool].length; i++)
+							for(var i = Math.max(0, lastLayer[tool].length-1000); i < lastLayer[tool].length; i++)
 							{
 									geometry.vertices.push(new THREE.Vector3(lastLayer[tool][i].x1, -lastLayer[tool][i].y1, 1));
 									geometry.vertices.push(new THREE.Vector3(lastLayer[tool][i].x2, -lastLayer[tool][i].y2, 1));
-															}
+							}
 							if(Math.min(status.currentTool, 0) === tool)
 							{
 								geometry.vertices.push(new THREE.Vector3(x1, -y1, 1));
 								geometry.vertices.push(new THREE.Vector3(x2, -y2, 1));
 							}
-							var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "hsl(" + (tool>0?(((tool-1)/nbTools)*360):360+(((tool-1)/nbTools)*360))  + ", " + (!tool?'0':'75') + "%, 50%)"}))
+							var line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: (tool > 0 ?tempChartOptions.colors[tool]:0xa0a0a0)}))
 							line.name = "toolPath";
 							liveScene.add(line);
 							
 						}
-						
-						
 							liveScene.remove(liveScene.getObjectByName("toolHead"));
 							var geometry = new THREE.Geometry();
-							drawHead(geometry, {x: x2, y: y2}, status.currentTool);
+							drawHead(geometry, {x: x2, y: y2}, status.currentTool, nbTools);
 							var line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xa0a0a0}))
 							line.name = "toolHead"
 							liveScene.add(line);
@@ -1729,8 +1729,9 @@ function requestFileInfo() {
 				
 				var dirName = response.fileName.substring(response.fileName.lastIndexOf("/")+1, response.fileName.lastIndexOf("."));
 				fileName = dirName + "_bp.jpg"
-				getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
-				
+				//getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
+				$("#livePreview")[0].src = ajaxPrefix + "img/GCodePreview/" + dirName + "/" + fileName;
+				$("#livePreview")[0].width = "250";
 				$("#dd_size").html(formatSize(response.size));
 				$("#dd_height").html((response.height > 0) ? T("{0} mm", response.height) : T("n/a"));
 				var layerHeight = (response.layerHeight > 0) ? T("{0} mm", response.layerHeight) : T("n/a");
@@ -2387,7 +2388,9 @@ function setGCodeFileItem(row, size, lastModified, height, firstLayerHeight, lay
 	img.id = name;
 	linkCell.find("span").replaceWith(img.outerHTML);
 	linkCell.html('<a href="#" class="a-gcode-file">' + linkCell.html() + '</a>');
-	getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
+	//getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
+	$("#"+name)[0].src = ajaxPrefix +"img/GCodePreview/" + name + "/" + name + "_ico.jpg";
+	$("#"+name)[0].width = "30";
 	$("#"+name)[0].classList.add("img_gcode");
 	row.data("size", size);
 	row.data("last-modified", lastModifiedValue);
@@ -2586,6 +2589,8 @@ $("body").on("click", ".a-gcode-file", function(e) {
 	$("#modal_confirmation_img")[0].parentNode.style.display = "block";
 	fileName = dirName + "_bp.jpg"
 	getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#modal_confirmation_img")[0], 100);
+	//$("#modal_confirmation_img")[0].src = ajaxPrefix +"img/GCodePreview/" + dirName + "/" + fileName;
+	//$("#modal_confirmation_img")[0].width = "100";
 	showConfirmationDialog(T("Run G-Code File"), T("Do you want to run <strong>{0}</strong>?", file), function() {
 		waitingForJobStart = true;
 		if (currentGCodeVolume != 0) {
@@ -2595,7 +2600,9 @@ $("body").on("click", ".a-gcode-file", function(e) {
 		} else {
 			sendGCode('M32 "' + currentGCodeDirectory.substring(10) + "/" + file + '"');
 		}
-		getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
+		//getPicture("0:/www/img/GCodePreview/" + dirName, fileName, $("#livePreview")[0], 250);
+		$("#livePreview")[0].src = ajaxPrefix +"img/GCodePreview/" + dirName + "/" + fileName;
+		$("#livePreview")[0].width = "250";
 	});
 	e.preventDefault();
 });
@@ -7516,8 +7523,8 @@ function closeAllNotifications() {
 var settings = {
 	updateInterval: 125,//500,			// in ms
 	extendedStatusInterval: 10,		// nth status request will include extended values
-	maxRetries: 2,					// number of AJAX retries before the connection is terminated
-
+	maxRetries: 4,					// number of AJAX retries before the connection is terminated
+	
 	haltedReconnectDelay: 10000,	// in ms (increased from 5000 for Duet WiFi)
 	updateReconnectDelay: 20000,	// in ms
 	dwsReconnectDelay: 45000,		// in ms
@@ -7531,7 +7538,7 @@ var settings = {
 	showFanControl: true,			// show fan sliders
 	showFanRPM: false,				// show fan RPM in sensors
 	settingsOnDuet: true,			// store the DWC settings on the Duet
-	language: "en",
+	language: "fr",
 
 	moveFeedrate: 6000,				// in mm/min
 	axisMoveSteps: [				// in mm
@@ -8699,7 +8706,7 @@ function startUpload(type, files, fromCallback) {
 		rowElem.appendTo("#table_upload_files > tbody");
 		uploadRows.push(rowElem);
 		
-		if (type == "gcode" || type == "print")
+		if (type == "gcode" || type == "start"  || type == "preview")
 		{
 			row = 	'<tr><td><span class="glyphicon glyphicon-asterisk"></span>' + this.name + ' <p id="status" style="display: block !important"></p></td>';
 			row += 		'<td><p id="eta" style="display: block !important"></p></td>';
@@ -8714,7 +8721,8 @@ function startUpload(type, files, fromCallback) {
 	$("#modal_upload").modal("show");
 
 	// Start file upload
-	uploadNextFile();
+	if(type != "preview") 
+		uploadNextFile();
 	lectDonnees();
 }
 
@@ -8940,7 +8948,8 @@ function fileUploadSkipped() {
 function cancelUpload() {
 	isUploading = uploadFilesSkipped = false;
 	finishCurrentUpload(false);
-	uploadRequest.abort();
+	if (uploadRequest) uploadRequest.abort();
+	if (lineReader) lineReader.abort();
 	finishUpload(false);
 	$("#modal_upload h4").text(T("Upload Cancelled!"));
 	startUpdates();
@@ -9125,7 +9134,7 @@ $("#btn_cancel_upload").click(function() {
 $(".btn-upload").click(function(e) {
 	if (!$(this).is(".disabled")) {
 		var type = $(this).data("type"), filter = "";
-		if (type == "gcode" || type == "start") {
+		if (type == "gcode" || type == "start" || type == "preview") {
 			filter = ".g,.gcode,.gc,.gco,.nc,.ngc,.tap";
 		} else if (type == "filament") {
 			filter = ".zip";
@@ -9137,7 +9146,7 @@ $(".btn-upload").click(function(e) {
 	e.preventDefault();
 });
 
-["start", "gcode", "macro", "filament", "generic"].forEach(function(type) {
+["start", "gcode", "macro", "filament", "generic", "preview"].forEach(function(type) {
 	var child = $(".btn-upload[data-type='" + type + "']");
 
 	// Drag Enter
@@ -10603,13 +10612,13 @@ $(".color-scheme").click(function(e) {
  * Released under the MIT license:
  * http://www.opensource.org/licenses/mit-license.php
  */
-var LineReader=function(e){if(!(this instanceof LineReader))return new LineReader(e);var n=this._internals={},t=this;n.reader=new FileReader,n.chunkSize=e&&e.chunkSize?e.chunkSize:1024,n.events={},n.canRead=!0,n.reader.onload=function(){if(n.chunk+=this.result,/\r|\n/.test(n.chunk))n.lines=n.chunk.match(/[^\r\n]+/g),t._hasMoreData()&&(n.chunk="\n"===n.chunk[n.chunk.length-1]?"":n.lines.pop()),t._step();else{if(t._hasMoreData())return t.read();if(n.chunk.length)return t._emit("line",[n.chunk,t._emit.bind(t,"end")]);t._emit("end")}},n.reader.onerror=function(){t._emit("error",[this.error])}};LineReader.prototype.on=function(e,n){this._internals.events[e]=n},LineReader.prototype.read=function(e){var n=this._internals;void 0!==e&&(n.file=e,n.fileLength=e.size,n.readPos=0,n.linepos=0,n.chunk="",n.lines=[]);var t=n.file.slice(n.readPos,n.readPos+n.chunkSize);n.linePos=n.readPos,n.readPos+=n.chunkSize,n.reader.readAsText(t)},LineReader.prototype.abort=function(){this._internals.canRead=!1},LineReader.prototype._step=function(){var e=this._internals;if(0===e.lines.length)return this._hasMoreData()?this.read():this._emit("end");e.canRead?(this._emit("line",[e.lines.shift(),this._step.bind(this)]),e.linePos+=e.lines[0]?e.lines[0].length:0):this._emit("end")},LineReader.prototype._hasMoreData=function(){var e=this._internals;return e.readPos<=e.fileLength},LineReader.prototype._emit=function(e,n){var t=this._internals.events;"function"==typeof t[e]&&t[e].apply(this,n)},LineReader.prototype.GetReadPos=function(){return this._internals.linePos};
+var LineReader=function(e){if(!(this instanceof LineReader))return new LineReader(e);var n=this._internals={},t=this;n.reader=new FileReader,n.chunkSize=e&&e.chunkSize?e.chunkSize:1024,n.events={},n.canRead=!0,n.reader.onload=function(){if(n.chunk+=this.result,/\r|\n/.test(n.chunk))n.lines=n.chunk.match(/[^\r\n]+/g),t._hasMoreData()&&(n.chunk="\n"===n.chunk[n.chunk.length-1]?"":n.lines.pop()),t._step();else{if(t._hasMoreData())return t.read();if(n.chunk.length)return t._emit("line",[n.chunk,t._emit.bind(t,"end")]);if(t._internals.canRead)t._emit("end")}},n.reader.onerror=function(){t._emit("error",[this.error])}};LineReader.prototype.on=function(e,n){this._internals.events[e]=n},LineReader.prototype.read=function(e){var n=this._internals;void 0!==e&&(n.file=e,n.fileLength=e.size,n.readPos=0,n.linepos=0,n.chunk="",n.lines=[]);var t=n.file.slice(n.readPos,n.readPos+n.chunkSize);n.linePos=n.readPos,n.readPos+=n.chunkSize,n.reader.readAsText(t)},LineReader.prototype.abort=function(){this._internals.canRead=!1; this._emit("abort", ["user aborted"])},LineReader.prototype._step=function(){var e=this._internals;if(0===e.lines.length)return this._hasMoreData()?this.read():this._emit("end");e.canRead?(this._emit("line",[e.lines.shift(),this._step.bind(this)]),e.linePos+=e.lines[0]?e.lines[0].length:0):this._emit("end")},LineReader.prototype._hasMoreData=function(){var e=this._internals;return e.readPos<=e.fileLength},LineReader.prototype._emit=function(e,n){var t=this._internals.events;"function"==typeof t[e]&&t[e].apply(this,n)},LineReader.prototype.GetReadPos=function(){return this._internals.linePos};
 
 /* img to Blob*/
 function b64toBlob(e,t,n){t=t||"",n=n||512;for(var o=atob(e),r=[],a=0;a<o.length;a+=n){for(var l=o.slice(a,a+n),i=new Array(l.length),s=0;s<l.length;s++)i[s]=l.charCodeAt(s);var c=new Uint8Array(i);r.push(c)}return new Blob(r,{type:t})}
 var savePicture=function(e,t){document.getElementById("myAwesomeForm");var n=e.split(";"),o=n[0].split(":")[1],r=b64toBlob(n[1].split(",")[1],o);var f = fileInput.name.substring(0,fileInput.name.lastIndexOf("."));while(f.includes(" ")||t.includes(" ")){f=f.replace(" ","_");t=t.replace(" ","_");}$.ajax({url:ajaxPrefix+"rr_upload?name=0:/www/img/GCodePreview/"+f+"/"+t+"&time="+encodeURIComponent(timeToStr(new Date)),data:r,type:"POST",contentType:!1,processData:!1,cache:!1,dataType:"json",async:0,error:function(e){console.error(e)},success:function(e){/*console.log(e)*/},complete:function(){console.log("Request finished.")}})};
 
-function getPicture(url, name, pic, size, nbTry)
+function getPicture(url, name, pic, size, nbTry) // new feature already deprecated
 {
 	while (url.includes(" ") || name.includes(" "))
 	{
@@ -10814,7 +10823,7 @@ function initLive()
 	prepareGridBPGeoLive(gridPrimeGeo, gridSecGeo);
 	
 	geometry = new THREE.Geometry();
-	drawHead(geometry, {x: 0, y: 0}, 0);
+	drawHead(geometry, {x: 0, y: 0}, 0, 3);
 	var lineSegments = new THREE.LineSegments(geometry, materSec);
 	lineSegments.name = "toolHead";
 	liveScene.add(lineSegments);
@@ -11017,17 +11026,14 @@ Math.degrees = function(radians) {
   return radians * 180 / Math.PI;
 };
 
-function drawHead(geo ,pos, tnum)
+function drawHead(geo ,pos, tnum, nbHead)
 {
-	if (tnum == 1)
-		pos.y -= 20;
-	if (tnum == 3){
-		pos.x += 20*Math.sqrt(3)/2;
-		pos.y += 10;
-	}
-	if (tnum == 2){
-		pos.x -= 20*Math.sqrt(3)/2;
-		pos.y += 10;
+
+	var angle = 360/nbHead;
+	if (tnum > 0)
+	{
+		pos.x -= (20*Math.cos(Math.radians(90-(angle*(tnum-1)))));
+		pos.y -= (20*Math.sin(Math.radians(90-(angle*(tnum-1)))));
 	}
 	for(var i = 0; i <= 360; i += 60)
 	{
@@ -11049,39 +11055,29 @@ function drawHead(geo ,pos, tnum)
 		geo.vertices.push(new THREE.Vector3((pos.x+(35*Math.cos(Math.radians(i)))),-(pos.y+(35*Math.sin(Math.radians(i)))), 1));
 	}
 	//console.log(str)
-	
-	if(liveScene.getObjectByName("toolHead1"))
-		liveScene.remove(liveScene.getObjectByName("toolHead1"));
-	if(liveScene.getObjectByName("toolHead2"))
-		liveScene.remove(liveScene.getObjectByName("toolHead2"));
-	if(liveScene.getObjectByName("toolHead3"))
-		liveScene.remove(liveScene.getObjectByName("toolHead3"));
 
+	liveScene.remove(liveScene.getObjectByName("toolHead0"));
 	geometry = new THREE.Geometry();
-	var posT1 = {};
-	posT1.x = pos.x + (20*Math.cos(Math.radians(90)));
-	posT1.y = pos.y + (20*Math.sin(Math.radians(90)));
-	drawTool(posT1, geometry);
-	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xe00000}));
-	tHead.name = "toolHead1";
-	liveScene.add(tHead);
-
-	geometry = new THREE.Geometry();
-	var posT3 = {};
-	posT3.x = pos.x + (20*Math.cos(Math.radians(-150)));
-	posT3.y = pos.y + (20*Math.sin(Math.radians(-150)));
-	drawTool(posT3, geometry);
-	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0x0000e0}))
-	tHead.name = "toolHead3";
+	var posTi = {};
+	posTi.x = pos.x 
+	posTi.y = pos.y
+	drawTool(posTi, geometry);
+	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xafafaf}));
+	tHead.name = "toolHead0";
 	liveScene.add(tHead);
 	
-	geometry = new THREE.Geometry();
-	pos.x+=(20*Math.cos(Math.radians(-30)));
-	pos.y+=(20*Math.sin(Math.radians(-30)));
-	drawTool(pos, geometry);
-	var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0x00e000}))
-	tHead.name = "toolHead2";
-	liveScene.add(tHead);
+	for (var i = 0; i < nbHead; i++)
+	{
+		liveScene.remove(liveScene.getObjectByName("toolHead"+(i+1)));
+		geometry = new THREE.Geometry();
+		var posTi = {};
+		posTi.x = pos.x + (20*Math.cos(Math.radians(90-(angle*i))));
+		posTi.y = pos.y + (20*Math.sin(Math.radians(90-(angle*i))));
+		drawTool(posTi, geometry);
+		var tHead = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: tempChartOptions.colors[i+1]}));
+		tHead.name = "toolHead"+(i+1);
+		liveScene.add(tHead);
+	}
 }
 
 function drawTool(pos, geo)
@@ -11143,7 +11139,7 @@ var preview;
 var fileSize;
 var meshMaterial;
 var fileInput;
-var lr;
+var lineReader;
 
 var gcodeLayers = [];
 var gcodeLayer = {lBBox : {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}},points: []};
@@ -11157,7 +11153,7 @@ var extruding = false;
 var boundingBox = {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-10000}}
 
 window.onload = function() {
-	lr = new LineReader({chunkSize: 512	});
+	lineReader = new LineReader({chunkSize: 512	});
 	$("#read").click(function(){lectDonnees (document.getElementById('fileInput').files[0])});
 };
 
@@ -11201,14 +11197,14 @@ function lectDonnees() {
 	lastPos = {x: undefined, y: undefined, z: undefined, e: undefined, f: undefined, w:"Unknown", t: 0};
 	relativeExtrude = false;
 	extruding = false;
-	lr.on('line', function(line, next) {
-		line = parseGCode(line, lr.offset);
+	lineReader.on('line', function(line, next) {
+		line = parseGCode(line, lineReader.offset);
 		var output = $('#fileDisplayArea');
 		if (line)
 		{
 			totalCount++;
 		}
-		instructionPos = lr.GetReadPos();
+		instructionPos = lineReader.GetReadPos();
 		if (Math.ceil((instructionPos/fileSize)*100) > lastPrct)
 		{
 			var progress = Math.ceil((instructionPos/fileSize)*100);
@@ -11218,17 +11214,23 @@ function lectDonnees() {
 			lastPrct = Math.ceil((instructionPos/fileSize)*100);
 			var ELT = ((new Date() - start)/(instructionPos/fileSize));
 			var ERT = ELT * (1-(instructionPos/fileSize))
-			parseRows[parsedFileCount].find("#eta")[0].innerHTML = "eta: " + toHMS(Math.round(ERT/100), true);
+			parseRows[parsedFileCount].find("#eta")[0].innerHTML = "eta: " + toHMS(Math.round(ERT/1000), true);
 		}
 		//if (totalCount < 100)
 			next();
 	});		
 	
-	lr.on('error', function(err) {
+	lineReader.on('abort', function(abo){
+		console.warn("read aborted");
+		console.warn(abo);
+		lineReader = new LineReader({chunkSize: 512	});
+	})
+	
+	lineReader.on('error', function(err) {
 		console.log(err);
 	});
 	
-	lr.on('end', function() {
+	lineReader.on('end', function() {
 		console.log("Read complete!\n"+totalCount+" lines parsed\n took " +  toHMS(Math.round((new Date() - start)/1000), true));
 		parseRows[parsedFileCount].find("#eta")[0].innerHTML = "Done took: " + toHMS(Math.round((new Date() - start)/1000), true)
 		var threeDee;
@@ -11253,7 +11255,7 @@ function lectDonnees() {
 		} 
 	});
 	
-	lr.read(fileInput);
+	lineReader.read(fileInput);
 }
 
 
@@ -11385,7 +11387,7 @@ function initRender()
 	}
 	var color = new THREE.Color().setHSL((i/nbKey), 0.75, 0.5);
 	//console.log(key +" ("+color.r+","+color.g+","+color.b+")")
-	pointMaterial = new THREE.LineBasicMaterial({color: color, width:2});
+	pointMaterial = new THREE.LineBasicMaterial({color: color, linewidth:2});
 	meshMaterial = new THREE.MeshPhongMaterial({color: color});
 	
 	for(var key in pointCloud)
@@ -11486,34 +11488,34 @@ function renderLoop()
 		}while ((new Date() - start < 50) && (lays[lay] != undefined ))
 	} else if (i < keys.length)
 	{
-		if (slicer != undefined)
+		/*if (slicer != undefined)
 		{
 			switch (slicer)
 			{
 				case Slicer.CURA:
-					//if (keys[i] == "MOVE")
-						//$("#"+keys[i].toLowerCase()+"_cura")[0].checked = false;
-					//$("#"+keys[i].toLowerCase()+"_cura")[0].parentElement.style.display = "block";
+					if (keys[i] == "MOVE")
+							$("#"+keys[i].toLowerCase()+"_cura")[0].checked = false;
+					$("#"+keys[i].toLowerCase()+"_cura")[0].parentElement.style.display = "block";
 					break;
 				case Slicer.SIMP:
-					//if (keys[i] == "MOVE")
-						//$("#"+keys[i].toLowerCase()+"_simp")[0].checked = false;
-					//$("#"+keys[i].toLowerCase()+"_simp")[0].parentElement.style.display = "block";
+					if (keys[i] == "MOVE")
+						$("#"+keys[i].toLowerCase()+"_simp")[0].checked = false;
+					$("#"+keys[i].toLowerCase()+"_simp")[0].parentElement.style.display = "block";
 					break;
 				case Slicer.SLIC:
-					//if (keys[i] == "MOVE")
-						//$("#"+keys[i].toLowerCase()+"_slic")[0].checked = false;
-					//$("#"+keys[i].toLowerCase()+"_slic")[0].parentElement.style.display = "block";
+					if (keys[i] == "MOVE")
+						$("#"+keys[i].toLowerCase()+"_slic")[0].checked = false;
+					$("#"+keys[i].toLowerCase()+"_slic")[0].parentElement.style.display = "block";
 					break;
 			}
-		}
+		}*/
 		i++;
 		lays = [];
 		for(var gcodeLayer in pointCloud[keys[i]])
 		{
 			lays.push(gcodeLayer);
 		}
-		var color = new THREE.Color().setHSL((i/nbKey), 0.75, 0.5);
+		var color = new THREE.Color(tempChartOptions.colors[parseInt(keys[i])]);
 		//console.log(key +" ("+color.r+","+color.g+","+color.b+")")
 		pointMaterial = new THREE.LineBasicMaterial({color: color, linewidth: 2});
 		meshMaterial = new THREE.MeshPhongMaterial({color: color});
@@ -11771,8 +11773,8 @@ function extractGCode(args)
 					{
 						setPoly(point_start, point_end);
 					} else {
-						pointCloud[lastPos.w][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_start );
-						pointCloud[lastPos.w][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_end );
+						pointCloud[lastPos.t][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_start );
+						pointCloud[lastPos.t][(curLay!=undefined?curLay:(Math.round(lastPos.z*100)))].vertices.push( point_end );
 					}
 					
 				}/* else {
@@ -11840,7 +11842,9 @@ function extractGCode(args)
 			break;
 			
 		case "G4":
-			// console.log("Wait")
+			if (DEBUG)
+				console.log("Wait");
+			break;
 		
 		case "G10":
 			if (DEBUG)
@@ -11969,7 +11973,7 @@ function extractGCode(args)
 				console.log("Tool 0 selected");
 				console.log(extruders[0]);
 			}
-			extWidth = extruders[0].width;
+			//extWidth = extruders[0].width;
 			lastPos.t = 0;
 			break;
 		
@@ -11978,7 +11982,7 @@ function extractGCode(args)
 				console.log("Tool 1 selected");
 				console.log(extruders[1]);
 			}
-			extWidth = extruders[1].width;
+			//extWidth = extruders[1].width;
 			lastPos.t = 1;	
 			break;
 			
@@ -11987,7 +11991,7 @@ function extractGCode(args)
 				console.log("Tool 2 selected");
 				console.log(extruders[2]);
 			}
-			extWidth = extruders[2].width;
+			//extWidth = extruders[2].width;
 			lastPos.t = 2;
 			break;
 		
@@ -11996,8 +12000,8 @@ function extractGCode(args)
 				console.log("Tool 3 selected");
 				console.log(extruders[3]);
 			}
-			extWidth = extruders[3].width;
-			lastpos.t = 3;
+			//extWidth = extruders[3].width;
+			lastPos.t = 3;
 			break;
 			
 		case "T4":
@@ -12005,8 +12009,8 @@ function extractGCode(args)
 				console.log("Tool 4 selected");
 				console.log(extruders[4]);
 			}
-			extWidth = extruders[4].width;
-			lastpos.t = 4;
+			//extWidth = extruders[4].width;
+			lastPos.t = 4;
 			break;
 		
 		case "T5":
@@ -12014,8 +12018,8 @@ function extractGCode(args)
 				console.log("Tool 5 selected");
 				console.log(extruders[5]);
 			}
-			extWidth = extruders[5].width;
-			lastpos.t = 5;
+			//extWidth = extruders[5].width;
+			lastPos.t = 5;
 			break;
 			
 		default :
