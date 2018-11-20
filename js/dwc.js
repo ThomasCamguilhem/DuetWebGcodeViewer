@@ -10703,7 +10703,7 @@ function initScene()
 {
 	statsfps = new Stats();
 	statsfps.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-	if(DEBUG)
+	//if(DEBUG)
 	{
 		document.body.appendChild( statsfps.dom );
 	}
@@ -10715,7 +10715,8 @@ function initScene()
 		statsfps.begin();
 		previewControls.update();
 		requestAnimationFrame( animate );
-		previewRenderer.render( previewScene, previewCamera );
+		if (hasGeoToRender || needsRedraw)
+			previewRenderer.render( previewScene, previewCamera );
 		liveRenderer.render(liveScene, liveCamera);
 		if (hasGeoToRender)
 			renderLoop();
@@ -11477,6 +11478,10 @@ function renderLoop()
 			console.error(e);
 			return;
 		}
+		clearFileCacheDirectory(currentGCodeDirectory);
+		gcodeUpdateIndex = -1;
+		updateGCodeFiles();
+		$(".span-refresh-files").addClass("hidden");
 		return;
 	}
 	if (lays[lay] != undefined )
@@ -11594,9 +11599,9 @@ function extractGCode(args)
 					nbLayers++;
 				}
 				startLayer = instructionPos;
-				if(PREVIEW) {
+				/* if(PREVIEW) {
 					/* ====== SHOW BOUNDING BOX ====== */
-					if (gcodeLayers[curLay-1] || gcodeLayers[curLay] || ((slicer == undefined || slicer == Slicer.SLIC) && nbLayers > 0))
+					/*if (gcodeLayers[curLay-1] || gcodeLayers[curLay] || ((slicer == undefined || slicer == Slicer.SLIC) && nbLayers > 0))
 					{
 						if (!previewScene.getObjectByName("bbox"))
 						{
@@ -11738,7 +11743,7 @@ function extractGCode(args)
 							return;
 						}
 					}
-				}
+				}*/
 				gcodeLayer = {lBBox : {min:{x:1000,y:1000,z:1000}, max:{x:-1000,y:-1000,z:-1000}},points: []};
 			}
 			
@@ -11839,6 +11844,98 @@ function extractGCode(args)
 				tmpPos.t = lastPos.t;
 				gcodeLayer.points.push(tmpPos);
 			}
+			break;
+		case "G2":
+			 console.warn("clockwise rotation not implemented");
+			 console.log(args);
+			 
+			 var rad = Math.sqrt(((args.i-args.x)*(args.i-args.x)) + ((args.y-args.j)*(args.y-args.j)))
+			 var acos = Math.acos((lastPos.x-args.i)/rad);
+			 var asin = Math.asin((lastPos.y-args.j)/rad);
+			 var startA = 0;
+			 if (acos == asin)
+			 {
+				 startA = acos;
+			 } else if ((acos- Math.PI == asin){
+				 startA = asin;
+			 } else {
+				 console.error('Que faire?')
+			 }
+			 
+			 acos = Math.acos(args.x/rad);
+			 asin = Math.asin(args.y/rad);
+			 var endA = 0;
+			 if (acos == asin)
+			 {
+				 endA = acos;
+			 } else {
+				 console.error('Que faire?')
+			 }
+			 var curve = new THREE.EllipseCurve(
+						args.i, args.j,   // cX, cY
+						rad, rad,         // xRadius, yRadius
+						startA, endA,	  // aStartAngle, aEndAngle
+						true,             // aClockwise
+						0                 // aRotation
+					);
+
+			var points = curve.getPoints( 50 );
+			var geometry = new THREE.BufferGeometry().setFromPoints( points );
+
+			var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+
+			// Create the final object to add to the scene
+			var ellipse = new THREE.Line( geometry, material );
+			ellipse.position.z = lastPos.z;
+			liveScene.add(ellipse);
+			
+			lastPos.x = args.x;
+			lastPos.y = args.y;
+			break;
+		case "G3":
+			 console.warn("counterclockwise rotation not implemented");
+			 console.log(args)
+			 
+			 var rad = Math.sqrt(((args.i-args.x)*(args.i-args.x)) + ((args.y-args.j)*(args.y-args.j)))
+			 var acos = Math.acos((lastPos.x-args.i)/rad);
+			 var asin = Math.asin((lastPos.y-args.j)/rad);
+			 var startA = 0;
+			 if (acos == asin)
+			 {
+				 startA = acos;
+			 } else {
+				 console.error('Que faire?')
+			 }
+			 
+			 acos = Math.acos(args.x/rad);
+			 asin = Math.asin(args.y/rad);
+			 var endA = 0;
+			 if (acos == asin)
+			 {
+				 endA = acos;
+			 } else {
+				 console.error('Que faire?')
+			 }
+			 var curve = new THREE.EllipseCurve(
+						args.i, args.j,   // cX, cY
+						rad, rad,         // xRadius, yRadius
+						startA, endA,	  // aStartAngle, aEndAngle
+						false,             // aClockwise
+						0                 // aRotation
+					);
+
+			var points = curve.getPoints( 50 );
+			var geometry = new THREE.BufferGeometry().setFromPoints( points );
+				
+			var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+
+			// Create the final object to add to the scene
+			var ellipse = new THREE.Line( geometry, material );
+			ellipse.position.z = lastPos.z;
+			liveScene.add(ellipse);
+
+			lastPos.x = args.x;
+			lastPos.y = args.y;
 			break;
 			
 		case "G4":
