@@ -48,14 +48,14 @@
 				</div>
 
 				<div class="list-group">
-					<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span> G-Code Console</a>
+					<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span> Console</a>
 					<a class="navlink list-group-item" href="#" data-target="files"><span class="glyphicon glyphicon-hdd"></span> G-Code Files <span class="glyphicon glyphicon-refresh span-refresh-files hidden"></span></a>
 					<a class="navlink list-group-item" href="#" data-target="macros"><span class="glyphicon glyphicon-link"></span> Macros <span class="glyphicon glyphicon-refresh span-refresh-macros hidden"></span></a>
 				</div>
 
 				<div class="list-group">
-					<a class="navlink list-group-item" href="#" data-target="filaments"><span class="glyphicon glyphicon-cd"></span> Filaments <span class="glyphicon glyphicon-refresh span-refresh-filaments hidden"></span></a>
-					<a class="navlink list-group-item" href="#" data-target="profiles"><span class="glyphicon glyphicon-cd"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span><span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
+					<a class="navlink list-group-item hidden" href="#" data-target="profiles"><span class="glyphicon glyphicon-cd"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 					<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 				</div>
@@ -859,14 +859,14 @@
 							</div>
 
 							<div class="list-group">
-								<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span> G-Code Console</a>
+								<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span>Console </a>
 								<a class="navlink list-group-item" href="#" data-target="files"><span class="glyphicon glyphicon-hdd"></span> G-Code Files <span class="glyphicon glyphicon-refresh span-refresh-files hidden"></span></a>
 								<a class="navlink list-group-item" href="#" data-target="macros"><span class="glyphicon glyphicon-link"></span> Macros <span class="glyphicon glyphicon-refresh span-refresh-macros hidden"></span></a>
 							</div>
 
 							<div class="list-group">
-								<a class="navlink list-group-item" href="#" data-target="filaments"><span class="glyphicon glyphicon-cd"></span> Filaments <span class="glyphicon glyphicon-refresh span-refresh-filaments hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="profiles"><span class="glyphicon glyphicon-eject" style="transform: rotate(180deg);"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
+								<a class="navlink list-group-item hidden" href="#" data-target="profiles"><span class="glyphicon glyphicon-eject" style="transform: rotate(180deg);"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 								<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 							</div>
@@ -1275,6 +1275,53 @@
 											</div>
 										</div>
 									</div>
+									
+									<div id="PreviewGcode" class="panel panel-default" style="/*!display: none*/">
+										<div class="panel-heading"> Gcode Visualizer</div>
+										<div class="panel-body">
+											<div style="display: none">
+												<form><input type="file" id="fileInput" style="display: inline-block"><input type="button" id="read" style="display:inline-block" value="Lecture"></form><br>
+												<h2 id="status"></h2>
+												<div id="loadingBar" style="height: 25px; width: 600px; border: 1px solid black;"><div id="loadedBar" style="height: 100%; width: 0%; background-color: #007000; color: #ffffff;"></div>
+												</div><p id="eta"></p><div id="threeDisplay" style="height: 400px; width: 400px; "></div></div>
+											<div style="width: 600px; height: 520px; overflow: hidden; margin:auto"  onmouseenter="zoomIn()" onmouseleave="zoomOut()" onmousemove="centerSvg(event)" onmousewheel="zoomSvg(event)" onwheel="zoomSvg(event)">
+												<div id="liveDisplay" style="width: 600px; height: 520px; transform: scale(0.5); transform-origin: 0% 0%"></div>
+												<script>
+												var zoomLevel = 2;
+												function zoomIn()
+												{														
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel) +")";
+														$("#liveDisplay")[0].firstElementChild.style.transition = "transform .5s"
+												}
+												function zoomOut()
+												{														
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+1+")";
+												}
+												function centerSvg(event)
+												{
+													var cX = (event.offsetX)/12;
+													var cY = (event.offsetY)/10.4;
+													//console.log("X = " + cX + "%")
+													//console.log("Y = " + cY + "%")
+													$("#liveDisplay")[0].firstElementChild.style["transform-origin"] = cX + "% " + cY + "%";
+												}
+												
+												function zoomSvg(event)
+												{
+													var  dir = event.deltaY;
+													var fast = event.shiftKey
+													if ((dir < 0) && (zoomLevel < 4)) // forward
+													{
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel *= 1.1) +")";
+													} else if ((dir > 0) && (zoomLevel > 1)) {
+														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel /= 1.1) +")";
+													}
+													event.preventDefault();
+												}
+												</script>
+											</div>
+										</div>
+									</div>
 								</div>
 
 								<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-right">
@@ -1538,53 +1585,6 @@
 										</table>
 									</div>
 									
-									<div id="PreviewGcode" class="panel panel-default" style="/*!display: none*/">
-										<div class="panel-heading"> Gcode Visualizer</div>
-										<div class="panel-body">
-											<div style="display: none">
-												<form><input type="file" id="fileInput" style="display: inline-block"><input type="button" id="read" style="display:inline-block" value="Lecture"></form><br>
-												<h2 id="status"></h2>
-												<div id="loadingBar" style="height: 25px; width: 600px; border: 1px solid black;"><div id="loadedBar" style="height: 100%; width: 0%; background-color: #007000; color: #ffffff;"></div>
-												</div><p id="eta"></p><div id="threeDisplay" style="height: 400px; width: 400px; "></div></div>
-											<div style="width: 600px; height: 520px; overflow: hidden; display: inline-block"  onmouseenter="zoomIn()" onmouseleave="zoomOut()" onmousemove="centerSvg(event)" onmousewheel="zoomSvg(event)" onwheel="zoomSvg(event)">
-												<div id="liveDisplay" style="width: 600px; height: 520px; transform: scale(0.5); transform-origin: 0% 0%"></div>
-												<script>
-												var zoomLevel = 2;
-												function zoomIn()
-												{														
-														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel) +")";
-														$("#liveDisplay")[0].firstElementChild.style.transition = "transform .5s"
-												}
-												function zoomOut()
-												{														
-														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+1+")";
-												}
-												function centerSvg(event)
-												{
-													var cX = (event.offsetX)/12;
-													var cY = (event.offsetY)/10.4;
-													//console.log("X = " + cX + "%")
-													//console.log("Y = " + cY + "%")
-													$("#liveDisplay")[0].firstElementChild.style["transform-origin"] = cX + "% " + cY + "%";
-												}
-												
-												function zoomSvg(event)
-												{
-													var  dir = event.deltaY;
-													var fast = event.shiftKey
-													if ((dir < 0) && (zoomLevel < 4)) // forward
-													{
-														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel *= 1.1) +")";
-													} else if ((dir > 0) && (zoomLevel > 1)) {
-														$("#liveDisplay")[0].firstElementChild.style.transform = "scale("+ (zoomLevel /= 1.1) +")";
-													}
-													event.preventDefault();
-												}
-												</script>
-											</div>
-										</div>
-									</div>
-
 									<div class="panel panel-default">
 										<div class="panel-heading">
 											<span>Estimations</span>
@@ -2126,10 +2126,73 @@
 							</div>
 						</div>
 
-						<!-- Filaments -->
-						<div id="page_filaments" class="page">
-							<div class="row">
-								<div class="col-md-12">
+						<!-- Materials -->
+						<div id="page_materials" class="page">
+							<form id="frm_material">
+							<!-- Page Selector (Desktop) -->
+								<ul class="nav nav-tabs hidden-xs hidden-sm">
+									<li id="tab_material" class=" active"><a href="#page_material" data-toggle="tab">Materials</a></li>
+									<li id="tab_filament" class="li-display hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li id="tab_liquid" class="li-display hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
+									<li id="tab_pellet" class="li-display hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
+									<li id="tab_fiber" class="li-display hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
+									<li id="tab_hybrid" class="li-display hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
+								</ul>
+
+								<!-- Page Selector (Mobile) -->
+								<ul class="nav nav-tabs visible-xs visible-sm">
+									<li class="active"><a href="#page_material" data-toggle="tab">Materials</a></li>
+									<li><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
+									<li>
+										<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
+										<ul class="dropdown-menu dropdown-menu-right" id="collapsed">
+											<li><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
+											<li class="li-display hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
+											<li class="li-display hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
+										</ul>
+									</li>
+								</ul>
+							</form>
+							<div class="tab-content well well-sm">
+								<!-- Material  -->
+								<div class="tab-pane row active" id="page_material">
+									<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_material">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Materials Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more materials configurations (drag&amp;drop is supported as well)" data-type="material" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_material" title="Create a new material configuration"><span class="glyphicon glyphicon-plus"></span> Create new Material</button>
+											</td>
+										</tr>
+									</table>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_materials">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="material">Material Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+									</div>
+								</div>
+							
+								<!-- Filaments  -->
+								<div class="tab-pane row hidden" id="page_filament">
+									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
 											<td>
@@ -2147,8 +2210,6 @@
 										</tr>
 									</table>
 
-									<h1 class="text-center text-muted">Connect to your Duet to display Filaments</h1>
-
 									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_filaments">
 										<thead>
 											<tr>
@@ -2161,38 +2222,34 @@
 											<!-- see JS -->
 										</tbody>
 									</table>
+									</div>
 								</div>
-							</div>
-						</div>
-						
-						<!-- Profiles -->
-						<div id="page_profiles" class="page">
-							<div class="row">
-								<div class="col-md-12">
+								
+								<!-- Liquids  -->
+								<div class="tab-pane row hidden" id="page_liquid">
+									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
 											<td>
-												<ol class="breadcrumb breadcrumb-directory" id="ol_profile">
-													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Profiles Directory</li>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_liquid">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Liquids Directory</li>
 												</ol>
 											</td>
 
 											<td class="hidden-xs hidden-sm hidden online-control">
-												<button class="btn btn-primary btn-upload disabled" title="Upload one or more profile configurations (drag&amp;drop is supported as well)" data-type="profile" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more liquid configurations (drag&amp;drop is supported as well)" data-type="liquid" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_profile" title="Create a new profile configuration"><span class="glyphicon glyphicon-plus"></span> Create new profile</button>
+												<button class="btn btn-info" id="btn_new_liquid" title="Create a new liquid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Liquid</button>
 											</td>
 										</tr>
 									</table>
 
-									<h1 class="text-center text-muted">Connect to your Duet to display profiles</h1>
-
-									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_profiles">
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_liquids">
 										<thead>
 											<tr>
 												<th><input type="checkbox"></th>
-												<th><a href="#" data-attribute="profile">Profile Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="liquid">Liquid Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
 												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
 											</tr>
 										</thead>
@@ -2200,10 +2257,126 @@
 											<!-- see JS -->
 										</tbody>
 									</table>
+									</div>
+								</div>
+								
+								<!-- Pellets  -->
+								<div class="tab-pane row hidden" id="page_pellet">
+									<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_pellet">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Pellets Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more pellet configurations (drag&amp;drop is supported as well)" data-type="pellet" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_pellet" title="Create a new pellet configuration"><span class="glyphicon glyphicon-plus"></span> Create new Pellet</button>
+											</td>
+										</tr>
+									</table>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_pellets">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="pellet">Pellet Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+									</div>
+								</div>
+								
+								<!-- Fibers  -->
+								<div class="tab-pane row hidden" id="page_fiber">
+									<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_fiber">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Fibers Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more fiber configurations (drag&amp;drop is supported as well)" data-type="fiber" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_fiber" title="Create a new fiber configuration"><span class="glyphicon glyphicon-plus"></span> Create new Fiber</button>
+											</td>
+										</tr>
+									</table>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_fibers">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="fiber">Fiber Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+									</div>
+								</div>
+								
+								<!-- Hybrids  -->
+								<div class="tab-pane row hidden" id="page_hybrid">
+									<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_hybrid">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Hybrids Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more hybrid configurations (drag&amp;drop is supported as well)" data-type="hybrid" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_hybrid" title="Create a new hybrid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Hybrid</button>
+											</td>
+										</tr>
+									</table>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_hybrids">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="hybrid">Hybrid Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+									</div>
 								</div>
 							</div>
 						</div>
 
+						<!-- Equipement/Setup -->
+						<div id="page_equipement_setup" class="page">
+							<div class="row">
+								<div class="col-md-8">
+								
+							<!--  TODO: Define contents -->
+								</div>
+							</div>
+						</div>
+						
 						<!-- Calibration -->
 						<div id="page_calibration" class="page">
 							<div class="row">
@@ -2320,7 +2493,7 @@
 														</tr>
 														<tr>
 															<th>Web Interface Version:</th>
-															<td id="dwc_version">1.22.4</td>
+															<td id="dwc_version">1.22.4-lynxter</td>
 														</tr>
 													</table>
 													<span id="span_copyright">Web Interface by Christian Hammacher<br/>Licensed under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0" target="blank">GPL v3</a></span>
