@@ -910,8 +910,54 @@ function updateStatus() {
 				getConfigResponse(true);
 				if (new Date().toISOString().split('T')[0] > configResponse.firmwareDate)
 				{
+					$("#modal_updates #input_update_rrf").empty();
+					$("#modal_updates #input_update_dwc").empty();
 					console.log("Time to look for updates!");
-					console.log(ajaxPrefix+"update?"+(lynxterFeatures.printer? "pv=" + lynxterFeatures.printer + "&": "") +"fv=" + configResponse.firmwareVersion +"&dwcv="+dwcVersion)
+					$.get("https://api.github.com/repos/thomaslynx/reprapfirmwarelynxter/releases", function(data){
+						var trouve = false;
+						var i = 0;
+						while (i < data.length && !trouve) {
+							if (!data[i].draft && !data[i].prerelease)
+							{
+								console.log(data[i].tag_name +" > " + configResponse.firmwareVersion + " " + (data[i].tag_name > configResponse.firmwareVersion));
+								if (data[i].tag_name > "2.01.lynx(RTOS)"/*configResponse.firmwareVersion*/)
+								{
+									$("#modal_updates #input_update_rrf").append("A new version is avaliable for the RepRap Firmware<br>    Current: " + configResponse.firmwareVersion + " => Avaliable: <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+									$("#modal_updates").modal("show");
+								} 
+								else
+								{
+									$("#modal_updates #input_update_rrf").append("RepRap Firmware is up to date");
+								}
+								
+								trouve = true;
+							}
+						}
+					});
+					
+					$.get("https://api.github.com/repos/thomaslynx/duetwebgcodeviewer/releases", function(data){
+						var trouve = false;
+						var i = 0;
+						while (i < data.length && !trouve) {
+							if (!data[i].draft && !data[i].prerelease)
+							{
+								console.log(data[i].tag_name +" > " + dwcVersion + " " + (data[i].tag_name > dwcVersion));
+								if (data[i].tag_name > dwcVersion)
+								{
+									$("#modal_updates #input_update_dwc").append("A new version is avaliable for the Web Control<br>    Current: " + dwcVersion + " => Avaliable:  <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+									$("#modal_updates").modal("show");
+								}
+								else
+								{
+									$("#modal_updates #input_update_dwc").append("Duet Web Control is up to date");
+								}
+								
+								trouve = true;
+							}
+						}
+					});
+					
+					//"fv=" + configResponse.firmwareVersion +"&dwcv="+dwcVersion)
 				}
 
 				justConnected = false;
@@ -2354,7 +2400,7 @@ function clearGCodeDirectory() {
 	$("#ol_gcode_directory > li.content").replaceWith('<li class="active content"><span class="glyphicon glyphicon-folder-open"></span> ' + baseCaption + '</li>');
 }
 
-function addGCodeFile(filename) {
+function addGCodeFileList(filename) {
 	$("#page_files h1").addClass("hidden");
 	$("#table_gcode_files").removeClass("hidden");
 
@@ -2371,7 +2417,7 @@ function addGCodeFile(filename) {
 	return $(row).appendTo("#table_gcode_files > tbody");
 }
 
-function addGCodeDirectory(name) {
+function addGCodeDirectoryList(name) {
 	$("#page_files h1").addClass("hidden");
 	$("#table_gcode_files").removeClass("hidden");
 
@@ -2397,7 +2443,53 @@ function addGCodeDirectory(name) {
 	gcodeLastDirectory = rowElem;
 }
 
-function setGCodeFileItem(row, size, lastModified, height, firstLayerHeight, layerHeight, filamentUsage, generatedBy) {
+
+function addGCodeFileMiniature(filename) {
+	$("#page_files h1").addClass("hidden");
+	$("#table_gcode_files").removeClass("hidden");
+	var row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
+	if (row.childNodes.length >= 8)
+	{
+		row.outerHTML += '<tr> </tr>';
+		row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
+	}
+	//row +=		'<td><input type="checkbox"></td>';
+	row.innerHTML +=	'<td class="name"><span class="glyphicon glyphicon-asterisk"></span> ' + filename + '</td>';
+	return $(row).appendTo("#table_gcode_files > tbody");
+}
+
+function addGCodeDirectoryMiniature(name) {
+	$("#page_files h1").addClass("hidden");
+	$("#table_gcode_files").removeClass("hidden");
+	
+	var row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
+	if (row.childNodes.length >= 8)
+	{
+		row.outerHTML +=	'<tr> </tr>';
+		row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
+	}
+
+	row.innerHTML += '<td><a href="#" class="a-gcode-directory"><span class="glyphicon glyphicon-folder-open"></span> ' + name + '</a></td>';
+	
+	var rowElem = $(row);
+	rowElem[0].addEventListener("dragstart", fileDragStart, false);
+	rowElem[0].addEventListener("dragend", fileDragEnd, false);
+
+	if (gcodeLastDirectory == undefined) {
+		var firstRow = $("#table_gcode_files > tbody > tr:first-child");
+		if (firstRow.length == 0) {
+			$("#table_gcode_files > tbody").append(rowElem);
+		} else {
+			rowElem.insertBefore(firstRow);
+		}
+	} else {
+		rowElem.insertAfter(gcodeLastDirectory);
+	}
+	gcodeLastDirectory = rowElem;
+}
+
+
+function setGCodeFileList(row, size, lastModified, height, firstLayerHeight, layerHeight, filamentUsage, generatedBy) {
 	var lastModifiedValue = (lastModified == undefined) ? 0 : lastModified.getTime();
 
 	// Make entry interactive and link the missing data attributes to it
@@ -2523,9 +2615,12 @@ function updateGCodeFiles() {
 			var row = $('#table_gcode_files > tbody > tr[data-file="' + filename + '"]');
 			if (row.length > 0) {
 				if (fileinfo.err == 0) {
-					setGCodeFileItem(row, fileinfo.size, strToTime(fileinfo.lastModified), fileinfo.height, fileinfo.firstLayerHeight, fileinfo.layerHeight, fileinfo.filament, fileinfo.generatedBy);
+					if($("#gcode_list").hasClass("active"))
+						setGCodeFileList(row, fileinfo.size, strToTime(fileinfo.lastModified), fileinfo.height, fileinfo.firstLayerHeight, fileinfo.layerHeight, fileinfo.filament, fileinfo.generatedBy);
+					else if($("#gcode_mini").hasClass("active"))
+						setGCodeFileMiniature(row, fileinfo.size, strToTime(fileinfo.lastModified), fileinfo.height, fileinfo.firstLayerHeight, fileinfo.layerHeight, fileinfo.filament, fileinfo.generatedBy);
 				} else {
-					setGCodeFileItem(row, 0, undefined, 0, 0, 0, [], "");
+					setGCodeFileList(row, 0, undefined, 0, 0, 0, [], "");
 				}
 			}
 
@@ -2564,10 +2659,13 @@ function getGCodeFiles(first) {
 						// add each file and directory
 						for(var i = 0; i < response.files.length; i++) {
 							if (response.files[i].indexOf("*") == 0) {
-								addGCodeDirectory(response.files[i].substr(1));
+								addGCodeDirectoryList(response.files[i].substr(1));
 							} else {
 								knownGCodeFiles.push(response.files[i]);
-								addGCodeFile(response.files[i]);
+								if($("#gcode_list").hasClass("active"))
+									addGCodeFileList(response.files[i]);
+								else if($("#gcode_mini").hasClass("active"))
+									addGCodeFileMiniature(response.files[i]);
 							}
 						}
 
@@ -10644,7 +10742,14 @@ $(".color-scheme").click(function(e) {
 	e.preventDefault();
 });
 
-
+$(".btn_arrange_gcode").click(function(event){
+	$(".btn_arrange_gcode").removeClass("active");
+	this.classList.add("active")
+	updateGCodeFiles();
+	console.log("clicked");
+	console.log(this);
+	console.log(event);
+})
 /**
  * LineReader
  * https://github.com/mgmeyers/LineReader

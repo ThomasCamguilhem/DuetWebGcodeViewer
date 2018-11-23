@@ -54,8 +54,11 @@
 				</div>
 
 				<div class="list-group">
-					<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span><span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
-					<a class="navlink list-group-item hidden" href="#" data-target="profiles"><span class="glyphicon glyphicon-cd"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="equipments_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 					<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 				</div>
@@ -866,7 +869,11 @@
 
 							<div class="list-group">
 								<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
-								<a class="navlink list-group-item hidden" href="#" data-target="profiles"><span class="glyphicon glyphicon-eject" style="transform: rotate(180deg);"></span> profiles <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="equipments_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Fabrication <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 								<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 							</div>
@@ -2043,6 +2050,12 @@
 												<button class="btn btn-info" id="btn_new_gcode_directory" title="Create a new directory"><span class="glyphicon glyphicon-folder-open"></span> Make new Directory</button>
 											</td>
 										</tr>
+										<tr>
+											<td>
+												<button id= "gcode_list" class="btn btn_arrange_gcode active"> <span class="glyphicon glyphicon-th-list"  style="transform: scale(1.75);margin: 8px;"></span></button>
+												<button id="gcode_mini" class="btn btn_arrange_gcode"> <span class="glyphicon glyphicon-th-large" style="transform: scale(1.75);margin: 8px;"></span></button>
+											</td>
+										</tr>
 									</table>
 
 									<h1 class="text-center text-muted">Connect to your Duet to display G-Code files</h1>
@@ -2577,7 +2590,6 @@
 											</div>
 										</div>
 									</div>
-
 									<!-- User Interface -->
 									<div class="tab-pane row" id="page_ui">
 										<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4 col-left">
@@ -4154,6 +4166,30 @@
 				</div>
 			</div>
 		</div>
+		
+		<div id="modal_updates" class="modal fade">
+			<div class="modal-dialog modal-md">
+				<div class="modal-content">
+					<form>
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+							<h4 class="modal-title">Updates avaliables</h4>
+						</div>
+						<div class="modal-body">
+							<h3>Duet Web Control</h3>
+							<p id="input_update_dwc"></p>
+							<h3>RepRap Firmware</h3>
+							<p id="input_update_rrf"></p>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger hidden"  data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+							<button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> OK</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		
 		<ul id="ul_file_contextmenu" class="dropdown-menu">
 			<li class="gcode-action single file"><a tabindex="-1" href="#" id="a_context_start"><span class="glyphicon glyphicon-play"></span> Start File</a></li>
 			<li class="gcode-action single file"><a tabindex="-1" href="#" id="a_context_simulate"><span class="glyphicon glyphicon-forward"></span> Simulate File</a></li>
