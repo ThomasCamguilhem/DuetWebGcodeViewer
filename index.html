@@ -4,19 +4,137 @@
 	<meta charset="utf-8">
 	<title>File API</title>
 
-	<link rel="stylesheet" href="style.css">
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
-	<script src="https://threejs.org/build/three.js"></script>
-	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <!--script src="sketch.js"></script-->
+	<link rel="stylesheet" href="css/style.css">
+	<script src="lib/jquery.min.js"></script>
+	<script src="lib/three.min.js"></script>
+	<script src="lib/stats.min.js"></script>
+	<script src="lib/OrbitControls.js"></script>
 	<script src="lib/LineReader.js"></script>
-	<script src="lib/gcode_reader.js"></script>
-	<script src="lib/gcode_parser.js"></script>
-	<script src="lib/gcom_parser.js"></script>
-	<script src="lib/threeScene.js"></script>
+	<script src="lib/FileUploader.js"></script>
+    <!--script src="sketch.js"></script-->
+	<script src="js/gcode_reader.js"></script>
+	<script src="js/gcode_parser.js"></script>
+	<script src="js/gcom_parser.js"></script>
+	<script src="js/threeScene.js"></script>
+	<script>
+	function listFiles(url, div)
+	{
+		$.get("http://192.168.1.40/rr_filelist?dir=" + url + "&first=0",
+			function(data, status){
+        		for(var file in data.files)
+        		{
+        			if(data.files[file].type == "d")
+        			{
+        				div = document.createElement('div');
+        				div.style.display = "none"
+        				div.id = data.files[file].name;
+        				document.body.append(div);
+        				listFiles(url+"/"+data.files[file].name, div);
+        			} else {
+        				getFile(url, data.files[file].name, div)
+        			}
+        		}
+    		});
+	}
+	
+	function getFile(url, name, div)
+	{
+		var xhr = new XMLHttpRequest();
+		 xhr.onreadystatechange = function() {
+		      if (this.readyState == 4 && this.status == 200)
+		      {
+		    	  var res = this.response;
+		          var reader = new window.FileReader();
+		          reader.readAsDataURL(res); 
+		          reader.onloadend = function() {
+		        	  	pic = document.createElement('img');
+	        			pic.src = reader.result
+	        			pic.alt = name;
+	        			pic.height = "300";
+	        			pic.width = "300";
+	        			div.append(pic);
+		          }
+		      }
+		 }
+		 xhr.responseType = 'blob';
+		 xhr.open("GET", "http://192.168.1.40/rr_download?name=" + url + "/" + name);
+		 xhr.send();
+	}
+	
+	listFiles("0:/www/img", document.createElement('div'))
+	
+	// Converts from degrees to radians.
+	Math.radians = function(degrees) {
+	  return degrees * Math.PI / 180;
+	};
+	 
+	// Converts from radians to degrees.
+	Math.degrees = function(radians) {
+	  return radians * 180 / Math.PI;
+	};
+	
+	function drawHead(pos, tnum)
+	{
+		if (tnum == 1)
+			pos.y -= 20;
+		if (tnum == 3){
+			pos.x += 20*Math.sqrt(3)/2
+			pos.y += 10
+		}
+		if (tnum == 2){
+			pos.x -= 20*Math.sqrt(3)/2
+			pos.y += 10
+		}
+		str = ""
+		for(var i = 0; i < 360; i += 60)
+		{
+			str += (i?", ":"")+(pos.x+(35*Math.cos(Math.radians(i)))) + " " +  (pos.y+(35*Math.sin(Math.radians(i))));
+			if(i == 0)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="587" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 60)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="573" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 120)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="27" y1="513" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 180)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="13" y1="498" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 240)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="290" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+			else if(i == 300)
+				$("svg")[0].innerHTML += '<line class="print_head" x1="310" y1="10" x2="'+ (pos.x+(35*Math.cos(Math.radians(i)))) +'" y2="'+ (pos.y+(35*Math.sin(Math.radians(i)))) +'" stroke="lightgray" style="fill: none"></line>'
+		}
+		console.log(str)
+		$("svg")[0].innerHTML += '<polygon class="print_head" points="'+ str +'" stroke="lightgray" style="fill: none"></polygon>'
+		var posT1 = {};
+		posT1.x = pos.x + (20*Math.cos(Math.radians(90)));
+		posT1.y = pos.y + (20*Math.sin(Math.radians(90)));
+		drawTool(posT1, "red");
+		var posT3 = {};
+		posT3.x = pos.x + (20*Math.cos(Math.radians(-150)));
+		posT3.y = pos.y + (20*Math.sin(Math.radians(-150)));
+		drawTool(posT3, "blue");
+		pos.x+=(20*Math.cos(Math.radians(-30)));
+		pos.y+=(20*Math.sin(Math.radians(-30)));
+		drawTool(pos, "green");
+	}
+	
+	function drawTool(pos, col)
+	{
+		str = ""
+		for(var i = 0; i < 360; i += 60)
+		{
+			str += (i?", ":"")+(pos.x+(Math.cos(Math.radians(i)))) + " " +  (pos.y+(Math.sin(Math.radians(i))));
+		}
+		console.log(str)
+		$("svg")[0].innerHTML += '<polygon class="printHead" points="'+ str +'" stroke="'+col+'" style="fill: none"></polygon>'
+	}
+	function ready(){
+		drawHead({x:300, y:295},1);
+		drawHead({x:300, y:295},2);
+		drawHead({x:300, y:295},3);
+	}
+	</script>
 </head>
-<body>
+<body onload="ready()">
     <h1>Text File Reader</h1>
     <div>
       Select a text file: 
@@ -30,10 +148,18 @@
 	</div>
 	<p id="eta"></p>
     <pre id="fileDisplayArea" ></pre>
-	<div id="threeDisplay" style="height: 600px; width: 400px; display: inline-block;">
+	<svg width = "600" height ="520" >
+		<circle cx="300" cy="295" r="225" stroke="gray" stroke-width="1" style="fill: none;"></circle>
+		<circle cx="300" cy="295" r="180" stroke="gray" stroke-width="1" style="fill: none;"></circle>
+		<rect x="290" y="  0" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray;"></rect>
+		<rect x="  0" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 20px 520px;" transform="rotate(45)" ></rect>
+		<rect x="580" y="510" width="20" height="10" stroke="gray" stroke-width="1" style="fill: darkgray; transform-origin: 580px 520px;" transform="rotate(-45)"></rect>
+		
+	</svg>
+	<div id="threeDisplay" style="height: 600px; width: 600px; display: inline-block;">
 	</div>
 	<form id="rendered-form" style="display: inline-block">
-		<div class="rendered-form" onchange="redrawScene()">
+		<div class="rendered-form" onchange=" initRedraw()">
 			<div class="fb-checkbox-group form-group field-cura_disp" style="display: none" id="form_cura">
 				<label for="cura_disp" class="fb-checkbox-group-label">	Cura Wall types<br>	</label>
 				<div class="checkbox-group">
