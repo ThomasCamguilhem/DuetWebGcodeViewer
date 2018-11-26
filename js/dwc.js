@@ -2421,7 +2421,7 @@ function addGCodeDirectoryList(name) {
 	$("#page_files h1").addClass("hidden");
 	$("#table_gcode_files").removeClass("hidden");
 
-	var row =	'<tr draggable="true" data-directory="' + name + '">';
+	var row =	'<tr draggable="true" style="width: 175px;" data-directory="' + name + '">';
 	row +=		'<td><input type="checkbox"></td>';
 	row +=		'<td colspan="7"><a href="#" class="a-gcode-directory"><span class="glyphicon glyphicon-folder-open"></span> ' + name + '</a></td>';
 	row +=		'</tr>';
@@ -2454,7 +2454,7 @@ function addGCodeFileMiniature(filename) {
 		row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
 	}
 	//row +=		'<td><input type="checkbox"></td>';
-	row.innerHTML +=	'<td class="name"><span class="glyphicon glyphicon-asterisk"></span> ' + filename + '</td>';
+	row.innerHTML +=	'<td draggable="true" class="name" style="width: 175px;" data-file="' + filename + '"><span class="glyphicon glyphicon-asterisk"></span> ' + filename + '</td>';
 	return $(row).appendTo("#table_gcode_files > tbody");
 }
 
@@ -2469,7 +2469,7 @@ function addGCodeDirectoryMiniature(name) {
 		row = $("#table_gcode_files tr")[$("#table_gcode_files tr").length -1];
 	}
 
-	row.innerHTML += '<td><a href="#" class="a-gcode-directory"><span class="glyphicon glyphicon-folder-open"></span> ' + name + '</a></td>';
+	row.innerHTML += '<td draggable="true" data-directory="' + name + '"><a href="#" class="a-gcode-directory"><img src="img/folder.svg" width="150"><br/> ' + name + '</a></td>';
 	
 	var rowElem = $(row);
 	rowElem[0].addEventListener("dragstart", fileDragStart, false);
@@ -2478,7 +2478,7 @@ function addGCodeDirectoryMiniature(name) {
 	if (gcodeLastDirectory == undefined) {
 		var firstRow = $("#table_gcode_files > tbody > tr:first-child");
 		if (firstRow.length == 0) {
-			$("#table_gcode_files > tbody").append(rowElem);
+			$("#table_gcode_files > tbody > tr").append(rowElem);
 		} else {
 			rowElem.insertBefore(firstRow);
 		}
@@ -2512,6 +2512,77 @@ function setGCodeFileList(row, size, lastModified, height, firstLayerHeight, lay
 	row.data("layer-height", layerHeight);
 	row.data("filament-usage", filamentUsage);
 	row.data("generated-by", generatedBy);
+
+	// Add drag&drop handlers
+	row[0].addEventListener("dragstart", fileDragStart, false);
+	row[0].addEventListener("dragend", fileDragEnd, false);
+
+	// Set size
+	row.find(".size").text(formatSize(size));
+
+	// Set last modified date
+	row.find(".last-modified").text(((lastModified == undefined) ? T("n/a") : lastModified.toLocaleString()));
+
+	// Set object height
+	row.find(".object-height").text((height > 0) ? T("{0} mm", height) : T("n/a"));
+
+	// Set layer height
+	if (layerHeight > 0) {
+		var lhText = (firstLayerHeight == undefined) ? (T("{0} mm", layerHeight)) : (firstLayerHeight + " / " + T("{0} mm", layerHeight));
+		row.find(".layer-height").text(lhText);
+	} else {
+		row.find(".layer-height").text(T("n/a"));
+	}
+
+	// Set filament usage
+	if (filamentUsage.length > 0) {
+		var totalUsage = filamentUsage.reduce(function(a, b) { return a + b; }).toFixed(1) + " mm";
+		if (filamentUsage.length == 1) {
+			row.find(".filament-usage").text(totalUsage);
+		} else {
+			var individualUsage = T("{0} mm", filamentUsage.reduce(function(a, b) { return T("{0} mm", a) + ", " + b; }));
+			var filaUsage = '<abbr class="filament-usage" title="' + individualUsage + '">' + totalUsage + "</abbr>";
+			row.find(".filament-usage").html(filaUsage);
+		}
+	} else {
+		row.find(".filament-usage").text(T("n/a"));
+	}
+
+	// Set slicer
+	var slicer = generatedBy.match(/(.*\d\.\d)\s/);
+	if (slicer == null) {
+		slicer = generatedBy;
+	} else {
+		slicer = slicer[1];
+	}
+	slicer = slicer.replace(" Version", "");
+	row.find(".generated-by").text((slicer != "") ? slicer : T("n/a"));
+}
+
+
+function setGCodeFileMiniature(row, size, lastModified, height, firstLayerHeight, layerHeight, filamentUsage, generatedBy) {
+	var lastModifiedValue = (lastModified == undefined) ? 0 : lastModified.getTime();
+
+	// Make entry interactive and link the missing data attributes to it
+	var linkCell = row;
+	var img = document.createElement('img');
+	var name = linkCell.html().substring(linkCell.html().lastIndexOf(">")+2, linkCell.html().lastIndexOf("."));
+	while (name.includes(" "))
+		name = name.replace(" ", "_");
+	img.id = name;
+	linkCell.find("span").replaceWith(img.outerHTML+"<BR/>");
+	linkCell.html('<div class="tooltip"><a href="#" class="a-gcode-file">' + linkCell.html() + '</a><span class="tooltiptext tooltip-bottom"></span></div>');
+	//getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
+	$("#"+name)[0].src = ajaxPrefix +"img/GCodePreview/" + name + "/" + name + "_ico.jpg";
+	$("#"+name)[0].width = "150";
+	$("#"+name)[0].classList.add("img_gcode_miniature");
+	row.find("span")[0].innerHTML += "size: "+ formatSize(size) + "<br>";
+	row.find("span")[0].innerHTML += "last-modified: " + new Date(lastModifiedValue).toLocaleString() + "<br>";
+	row.find("span")[0].innerHTML += "height: " + height + "mm <br>";
+	row.find("span")[0].innerHTML += "first-layer-height: "+  firstLayerHeight + "mm<br>";
+	row.find("span")[0].innerHTML += "layer-height: " + layerHeight + "mm<br>";
+	row.find("span")[0].innerHTML += "filament-usage: " + (filamentUsage/1000).toFixed(2) + "m<br>";
+	row.find("span")[0].innerHTML += "generated-by: " + generatedBy + "<br>";
 
 	// Add drag&drop handlers
 	row[0].addEventListener("dragstart", fileDragStart, false);
@@ -2613,6 +2684,10 @@ function updateGCodeFiles() {
 			gcodeUpdateIndex++;
 
 			var row = $('#table_gcode_files > tbody > tr[data-file="' + filename + '"]');
+			if (row.length == 0)
+			{
+				row = $('#table_gcode_files > tbody > tr > td[data-file="' + filename + '"]');
+			}
 			if (row.length > 0) {
 				if (fileinfo.err == 0) {
 					if($("#gcode_list").hasClass("active"))
@@ -2620,7 +2695,11 @@ function updateGCodeFiles() {
 					else if($("#gcode_mini").hasClass("active"))
 						setGCodeFileMiniature(row, fileinfo.size, strToTime(fileinfo.lastModified), fileinfo.height, fileinfo.firstLayerHeight, fileinfo.layerHeight, fileinfo.filament, fileinfo.generatedBy);
 				} else {
-					setGCodeFileList(row, 0, undefined, 0, 0, 0, [], "");
+					if($("#gcode_list").hasClass("active"))
+						setGCodeFileList(row, 0, undefined, 0, 0, 0, [], "");
+					else if($("#gcode_mini").hasClass("active"))
+						setGCodeFileMiniature(row, 0, undefined, 0, 0, 0, [], "");
+						
 				}
 			}
 
@@ -2659,7 +2738,10 @@ function getGCodeFiles(first) {
 						// add each file and directory
 						for(var i = 0; i < response.files.length; i++) {
 							if (response.files[i].indexOf("*") == 0) {
-								addGCodeDirectoryList(response.files[i].substr(1));
+								if($("#gcode_list").hasClass("active"))
+									addGCodeDirectoryList(response.files[i].substr(1));
+								else if($("#gcode_mini").hasClass("active"))
+									addGCodeDirectoryMiniature(response.files[i].substr(1));
 							} else {
 								knownGCodeFiles.push(response.files[i]);
 								if($("#gcode_list").hasClass("active"))
@@ -2685,7 +2767,15 @@ function getGCodeFiles(first) {
 
 function gcodeUpdateFinished() {
 	var table = $("#table_gcode_files").css("cursor", "");
-	sortTable(table);
+
+	if($("#gcode_list").hasClass("active"))
+		sortTable(table);
+	else if($("#gcode_mini").hasClass("active"))
+	{
+		sortTableTd(table);
+		$("#table_gcode_files > thead")[0].style.display = "none";
+		$("#table_gcode_files > tbody > td").prop("style", "text-align: center; vertical-align: middle; border-right: 1px solid lightgray;");
+	}
 
 	if (isConnected) {
 		$(".span-refresh-files").toggleClass("hidden", currentPage != "files");
@@ -2696,14 +2786,14 @@ function gcodeUpdateFinished() {
 }
 
 $("body").on("click", ".a-gcode-directory", function(e) {
-	setGCodeDirectory(currentGCodeDirectory + "/" + $(this).closest("tr").data("directory"));
+	setGCodeDirectory(currentGCodeDirectory + "/" + ($(this).closest("tr").data("directory")?$(this).closest("tr").data("directory"):$(this).closest("td").data("directory")));
 	gcodeUpdateIndex = -1;
 	updateGCodeFiles();
 	e.preventDefault();
 });
 
 $("body").on("click", ".a-gcode-file", function(e) {
-	var file = $(this).closest("tr").data("file");
+	var file = ($(this).closest("tr").data("file")?$(this).closest("tr").data("file"):$(this).closest("td").data("file"));
 	var dirName = file.substring(file.lastIndexOf("/"), file.lastIndexOf("."));
 	$("#modal_confirmation_img")[0].parentNode.style.display = "block";
 	fileName = dirName + "_bp.jpg"
@@ -3651,7 +3741,11 @@ $(".table-files").on("click", "tr", function(e) {
 
 $(".table-files").on("contextmenu", "tr", function(e) {
 	if ($(e.target).closest("tbody").length > 0) {
-		showContextMenu($(e.target).closest("tr"), e.clientX, e.clientY);
+		if($("#gcode_list").hasClass("active"))
+			showContextMenu($(e.target).closest("tr"), e.clientX, e.clientY);
+		else if($("#gcode_mini").hasClass("active"))
+			showContextMenu($(e.target).closest("td"), e.clientX, e.clientY);
+			
 		e.stopPropagation();
 	}
 	e.preventDefault();
@@ -3728,6 +3822,46 @@ function sortTable(table) {
 		$(this).appendTo(body);
 	});
 }
+
+function sortTableTd(table) {
+	var sortingSpan = table.children("thead").find("span.glyphicon");
+	var attribute = sortingSpan.parent().children("a").data("attribute");
+	var ascending = sortingSpan.hasClass("glyphicon-sort-by-alphabet");
+
+	var cols = table.children("tbody").children().children().detach();
+	if (table.prop("id") == "table_filaments") {
+		sortTableArray(cols, attribute, ascending);
+	} else {
+		var directories = cols.filter("[data-directory]");
+		var files = cols.filter("[data-file]");
+
+		sortTableArray(directories, (attribute == "filename") ? "directory" : attribute, ascending);
+		sortTableArray(files, (attribute == "filename") ? "file" : attribute, ascending);
+
+		cols = [];
+		$.each(directories, function() { cols.push(this); });
+		$.each(files, function() { cols.push(this); });
+	}
+
+	var body = table.children("tbody");
+	var rows = Math.ceil(cols.length/8);
+	var cols_rows = Math.floor(cols.length/rows);
+	var nbCols = 0;
+	var row = document.createElement("tr");
+	$.each(cols, function() {
+		if (nbCols >= cols_rows)
+		{
+			$(row).appendTo(body);
+			row = document.createElement("tr");
+			nbCols = 0;
+		}
+		$(this).prop("style", "width: 155px")
+		$(this).appendTo(row);
+		nbCols ++;
+	});
+	$(row).appendTo(body);
+}
+
 
 function sortTableArray(array, attribute, ascending) {
 	array.sort(function(a, b) {
@@ -7915,7 +8049,7 @@ function applySettings() {
 	}
 
 	// Make main content scrollable on md+ screens or restore default behavior
-	$("#div_content").css("overflow-y", (settings.scrollContent) ? "auto" : "").resize();
+	//$("#div_content").css("overflow-y", (settings.scrollContent) ? "auto" : "").resize();
 
 	/* Set values on the Settings page */
 
@@ -10744,11 +10878,12 @@ $(".color-scheme").click(function(e) {
 
 $(".btn_arrange_gcode").click(function(event){
 	$(".btn_arrange_gcode").removeClass("active");
-	this.classList.add("active")
-	updateGCodeFiles();
+	this.classList.add("active");
 	console.log("clicked");
 	console.log(this);
 	console.log(event);
+	gcodeUpdateIndex = -1;
+	updateGCodeFiles();
 })
 /**
  * LineReader
