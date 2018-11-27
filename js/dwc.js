@@ -633,6 +633,72 @@ function startUpdates() {
 function stopUpdates() {
 	stopUpdating = updateTaskLive;
 }
+
+var updateLinks = {};
+
+function checkForUpdates(){
+	getConfigResponse(true);
+	if (new Date().toISOString().split('T')[0] > configResponse.firmwareDate)
+	{
+		$("#modal_updates #input_update_rrf").empty();
+		$("#modal_updates #input_update_dwc").empty();
+		console.log("Time to look for updates!");
+		$.get("https://api.github.com/repos/thomaslynx/reprapfirmwarelynxter/releases", function(data){
+			var trouve = false;
+			var i = 0;
+			while (i < data.length && !trouve) {
+				if (!data[i].draft && !data[i].prerelease)
+				{
+					console.log(data[i].tag_name +" > " + configResponse.firmwareVersion + " " + (data[i].tag_name > configResponse.firmwareVersion));
+					if (data[i].tag_name > configResponse.firmwareVersion)
+					{
+						updateLinks.rrf = {};
+						updateLinks.rrf.name = data[i].assets[0].name;
+						updateLinks.rrf.url = data[i].assets[0].url;
+						updateLinks.rrf.download_url = data[i].assets[0].browser_download_url;
+						updateLinks.rrf.updated = data[i].assets[0].updated_at;
+						$("#modal_updates #input_update_rrf").append("A new version is avaliable for the RepRap Firmware<br>    Current: " + configResponse.firmwareVersion + " => Avaliable: <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+						$("#btn_do_update").removeClass("disabled");
+					} 
+					else
+					{
+						$("#modal_updates #input_update_rrf").append("RepRap Firmware is up to date");
+					}
+					
+					trouve = true;
+				}
+			}
+		});
+		
+		$.get("https://api.github.com/repos/thomaslynx/duetwebgcodeviewer/releases", function(data){
+			var trouve = false;
+			var i = 0;
+			while (i < data.length && !trouve) {
+				if (!data[i].draft && !data[i].prerelease)
+				{
+					console.log(data[i].tag_name +" > " + dwcVersion + " " + (data[i].tag_name > dwcVersion));
+					if (data[i].tag_name > dwcVersion)
+					{
+						updateLinks.dwc = {};
+						updateLinks.dwc.name = data[i].assets[0].name;
+						updateLinks.dwc.url = data[i].assets[0].url;
+						updateLinks.dwc.download_url = data[i].assets[0].browser_download_url;
+						updateLinks.dwc.updated = data[i].assets[0].updated_at;
+						$("#modal_updates #input_update_dwc").append("A new version is avaliable for the Web Control<br>    Current: " + dwcVersion + " => Avaliable:  <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+						$("#btn_do_update").removeClass("disabled");
+					}
+					else
+					{
+						$("#modal_updates #input_update_dwc").append("Duet Web Control is up to date");
+					}
+					
+					trouve = true;
+				}
+			}
+		});
+		$("#modal_updates").modal("show");
+	}
+}
 var couchePrec = -1;
 var lastLayer = [[],[],[],[],[],[]];
 var nbTools = 1;
@@ -907,59 +973,12 @@ function updateStatus() {
 						updateDisplayFiles();
 					}
 				}
-				getConfigResponse(true);
-				if (new Date().toISOString().split('T')[0] > configResponse.firmwareDate)
-				{
-					$("#modal_updates #input_update_rrf").empty();
-					$("#modal_updates #input_update_dwc").empty();
-					console.log("Time to look for updates!");
-					$.get("https://api.github.com/repos/thomaslynx/reprapfirmwarelynxter/releases", function(data){
-						var trouve = false;
-						var i = 0;
-						while (i < data.length && !trouve) {
-							if (!data[i].draft && !data[i].prerelease)
-							{
-								console.log(data[i].tag_name +" > " + configResponse.firmwareVersion + " " + (data[i].tag_name > configResponse.firmwareVersion));
-								if (data[i].tag_name > "2.01.lynx(RTOS)"/*configResponse.firmwareVersion*/)
-								{
-									$("#modal_updates #input_update_rrf").append("A new version is avaliable for the RepRap Firmware<br>    Current: " + configResponse.firmwareVersion + " => Avaliable: <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
-									$("#modal_updates").modal("show");
-								} 
-								else
-								{
-									$("#modal_updates #input_update_rrf").append("RepRap Firmware is up to date");
-								}
-								
-								trouve = true;
-							}
-						}
-					});
-					
-					$.get("https://api.github.com/repos/thomaslynx/duetwebgcodeviewer/releases", function(data){
-						var trouve = false;
-						var i = 0;
-						while (i < data.length && !trouve) {
-							if (!data[i].draft && !data[i].prerelease)
-							{
-								console.log(data[i].tag_name +" > " + dwcVersion + " " + (data[i].tag_name > dwcVersion));
-								if (data[i].tag_name > dwcVersion)
-								{
-									$("#modal_updates #input_update_dwc").append("A new version is avaliable for the Web Control<br>    Current: " + dwcVersion + " => Avaliable:  <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
-									$("#modal_updates").modal("show");
-								}
-								else
-								{
-									$("#modal_updates #input_update_dwc").append("Duet Web Control is up to date");
-								}
-								
-								trouve = true;
-							}
-						}
-					});
-					
-					//"fv=" + configResponse.firmwareVersion +"&dwcv="+dwcVersion)
-				}
-
+				if(settings.checkForUpdates)
+					checkForUpdates();
+				setTimeout(function(){
+				if(settings.autoUpdate && !($("#btn_do_update").hasClass("disabled")))
+					doUpdate();
+				}, 1000);
 				justConnected = false;
 			}
 
@@ -7788,9 +7807,12 @@ function closeAllNotifications() {
 
 
 var settings = {
-	updateInterval: 125,//500,			// in ms
+	updateInterval: 500,			// in ms
 	extendedStatusInterval: 10,		// nth status request will include extended values
 	maxRetries: 4,					// number of AJAX retries before the connection is terminated
+	
+	checkForUpdates: true,			// check for updates on dwc startup
+	autoUpdate: false,				// update if avaliable
 	
 	haltedReconnectDelay: 10000,	// in ms (increased from 5000 for Duet WiFi)
 	updateReconnectDelay: 20000,	// in ms
@@ -8049,7 +8071,7 @@ function applySettings() {
 	}
 
 	// Make main content scrollable on md+ screens or restore default behavior
-	//$("#div_content").css("overflow-y", (settings.scrollContent) ? "auto" : "").resize();
+	$("#div_content").css("overflow-y", (settings.scrollContent) ? "auto" : "").resize();
 
 	/* Set values on the Settings page */
 
@@ -8071,6 +8093,8 @@ function applySettings() {
 			}
 		}
 	}
+	
+	$("#btn_check_updates").removeClass("disabled")
 
 	// Set theme selection
 	$("#btn_theme").data("theme", settings.theme);
@@ -10876,6 +10900,8 @@ $(".color-scheme").click(function(e) {
 	e.preventDefault();
 });
 
+/** LYNXMOD **/
+
 $(".btn_arrange_gcode").click(function(event){
 	$(".btn_arrange_gcode").removeClass("active");
 	this.classList.add("active");
@@ -10885,6 +10911,53 @@ $(".btn_arrange_gcode").click(function(event){
 	gcodeUpdateIndex = -1;
 	updateGCodeFiles();
 })
+
+$("#btn_do_update").click(true, doUpdate);
+
+function doUpdate(manual){
+	for (elem in updateLinks)
+	{
+		if(manual || true){
+
+			var popunder = window.open( updateLinks[elem].download_url+"?access_token=30d3a7f0ebe4bb3c2077ce47c978f193c5442698");
+			if(popunder)
+			popunder.blur();
+			window.focus();
+		} else {
+			console.log("getting " + updateLinks[elem].url);
+			$.ajaxSetup({
+				   headers:{
+					   "Accept":  "application/octet-stream"
+				   }
+				});
+			$.get(updateLinks[elem].url+"?access_token=30d3a7f0ebe4bb3c2077ce47c978f193c5442698", null, function(res){console.log(res)})
+			const req = new XMLHttpRequest();
+			req.onreadystatechange = function(event) {
+			    // XMLHttpRequest.DONE === 4
+			    if (this.readyState === XMLHttpRequest.DONE) {
+			    	if(req.status === 200){
+						console.log("ok " + req.responseText);
+						
+						console.log("posting " +res + " to "+ ajaxPrefix+"rr_upload?name=0:/sys/" + updateLinks[elem].name + "&time="+updateLinks[elem].updated)
+						//$.post(ajaxPrefix+"rr_upload?name=0:/sys/" + updateLinks[elem].name + "&time="+updateLinks[elem].updated, res)
+					} else {
+						console.log("Status de la réponse: %d (%s)", req.status, req.statusText);
+					}
+				}
+			    if(this.readyState == this.HEADERS_RECEIVED) {
+			        console.log(req.getResponseHeader("Location"));
+			    }
+			    console.log(req);
+			}
+			//req.open("GET", updateLinks[elem].url+"?access_token=30d3a7f0ebe4bb3c2077ce47c978f193c5442698", true);
+			//req.setRequestHeader("Accept", "application/octet-stream");
+			//req.withCredentials = true;
+			//req.send(null);
+		}
+	}
+}
+
+
 /**
  * LineReader
  * https://github.com/mgmeyers/LineReader

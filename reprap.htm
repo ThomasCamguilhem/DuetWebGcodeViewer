@@ -2511,7 +2511,7 @@
 															<td id="dwc_version">1.22.5-lynxter</td>
 														</tr>
 													</table>
-													<span id="span_copyright">Web Interface by Christian Hammacher<br/>Licensed under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0" target="blank">GPL v3</a></span>
+													<span id="span_copyright">Web Interface by Christian Hammacher updated by Lynxter<br/>Licensed under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0" target="blank">GPL v3</a></span>
 												</div>
 											</div>
 
@@ -2586,6 +2586,33 @@
 														<input type="number" id="input_reconnect_dwc_delay" class="form-control" title="Time to wait for a reconnect when a new Duet Web Control binary is about to be flashed (Duet WiFi only)" data-setting="dwcReconnectDelay" data-factor="1000">
 														<span class="input-group-addon">s</span>
 													</div>
+												</div>
+											</div>
+										</div>
+										
+										<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-right">
+											<div class="panel panel-default">
+												<div class="panel-heading">
+													<span>Updates Preferences</span>
+												</div>
+
+												<div class="panel-body">
+													<div class="checkbox">
+														<label title="Always check for updates on interface startup">
+															<input type="checkbox" data-setting="checkForUpdates"/> Check for updates on startup
+														</label>
+													</div>
+													<div class="checkbox">
+														<label title="Auto uupdate if avaliable">
+															<input type="checkbox" data-setting="autoUpdate"/> Auto update if avaliable
+														</label>
+													</div>
+													
+													<button class="btn btn-success disabled" id="btn_check_updates" title="Manualy check for updates">Check for updates</button>
+													<button class="btn btn-success disabled" id="btn_do_update" title="Manualy update">Manualy update</button>
+															
+
+													
 												</div>
 											</div>
 										</div>
