@@ -555,7 +555,7 @@ function postConnect(response) {
 
 	loadThemes();
 	getOemFeatures();
-	updateFilaments();
+	updateMaterials();
 
 	if (needsInitialSettingsUpload) {
 		uploadTextFile("0:/www/dwc.json", JSON.stringify(settings), undefined, false);
@@ -636,7 +636,7 @@ function stopUpdates() {
 
 var updateLinks = {};
 
-function checkForUpdates(){
+function checkForUpdates(forceDisplay){
 	getConfigResponse(true);
 	if (new Date().toISOString().split('T')[0] > configResponse.firmwareDate)
 	{
@@ -657,8 +657,9 @@ function checkForUpdates(){
 						updateLinks.rrf.url = data[i].assets[0].url;
 						updateLinks.rrf.download_url = data[i].assets[0].browser_download_url;
 						updateLinks.rrf.updated = data[i].assets[0].updated_at;
-						$("#modal_updates #input_update_rrf").append("A new version is avaliable for the RepRap Firmware<br>    Current: " + configResponse.firmwareVersion + " => Avaliable: <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+						$("#modal_updates #input_update_rrf").append("A new version is avaliable for the RepRap Firmware<br>    Current: " + configResponse.firmwareVersion + " => Avaliable: <a href='" +  data[i].html_url + "'>" + data[i].tag_name);
 						$("#btn_do_update").removeClass("disabled");
+						$("#modal_updates").modal("show");
 					} 
 					else
 					{
@@ -684,19 +685,20 @@ function checkForUpdates(){
 						updateLinks.dwc.url = data[i].assets[0].url;
 						updateLinks.dwc.download_url = data[i].assets[0].browser_download_url;
 						updateLinks.dwc.updated = data[i].assets[0].updated_at;
-						$("#modal_updates #input_update_dwc").append("A new version is avaliable for the Web Control<br>    Current: " + dwcVersion + " => Avaliable:  <a href='" + data[i].assets[0].browser_download_url + "'>" + data[i].tag_name);
+						$("#modal_updates #input_update_dwc").append("A new version is avaliable for the Web Control<br>    Current: " + dwcVersion + " => Avaliable:  <a href='" + data[i].html_url + "'>" + data[i].tag_name);
 						$("#btn_do_update").removeClass("disabled");
+						$("#modal_updates").modal("show");
 					}
 					else
 					{
 						$("#modal_updates #input_update_dwc").append("Duet Web Control is up to date");
 					}
-					
 					trouve = true;
 				}
 			}
 		});
-		$("#modal_updates").modal("show");
+		if (forceDisplay)
+			$("#modal_updates").modal("show");
 	}
 }
 var couchePrec = -1;
@@ -964,8 +966,9 @@ function updateStatus() {
 					updateGCodeFiles();
 				} else if (currentPage == "control" || currentPage == "macros") {
 					updateMacroFiles();
-				} else if (currentPage == "filaments") {
-					updateFilaments();
+				} else if (currentPage == "materials") {
+					// DO SOMETHING THERE
+					updateMaterials();
 				} else if (currentPage == "settings") {
 					if ($("#page_sysedit").hasClass("active")) {
 						updateSysFiles();
@@ -2590,7 +2593,7 @@ function setGCodeFileMiniature(row, size, lastModified, height, firstLayerHeight
 		name = name.replace(" ", "_");
 	img.id = name;
 	linkCell.find("span").replaceWith(img.outerHTML+"<BR/>");
-	linkCell.html('<div class="tooltip"><a href="#" class="a-gcode-file">' + linkCell.html() + '</a><span class="tooltiptext tooltip-bottom"></span></div>');
+	linkCell.html('<div class="udtooltip"><a href="#" class="a-gcode-file">' + linkCell.html() + '</a><span class="udtooltiptext udtooltip-bottom"></span></div>');
 	//getPicture("0:/www/img/GCodePreview/" + name, name + "_ico.jpg" , $("#"+name)[0], 30);
 	$("#"+name)[0].src = ajaxPrefix +"img/GCodePreview/" + name + "/" + name + "_ico.jpg";
 	$("#"+name)[0].width = "150";
@@ -2788,9 +2791,10 @@ function gcodeUpdateFinished() {
 	var table = $("#table_gcode_files").css("cursor", "");
 
 	if($("#gcode_list").hasClass("active"))
-		sortTable(table);
-	else if($("#gcode_mini").hasClass("active"))
 	{
+		sortTable(table);
+		$("#table_gcode_files > thead")[0].style.display = "";
+	} else if($("#gcode_mini").hasClass("active")) {
 		sortTableTd(table);
 		$("#table_gcode_files > thead")[0].style.display = "none";
 		$("#table_gcode_files > tbody > td").prop("style", "text-align: center; vertical-align: middle; border-right: 1px solid lightgray;");
@@ -3207,21 +3211,174 @@ $("body").on("click", ".a-macro-file", function(e) {
 
 /* Filaments */
 
-$(".span-refresh-filaments").click(function() {
-	updateFilaments();
-	$(".span-refresh-filaments").addClass("hidden");
+$(".span-refresh-materials").click(function() {
+	updateMaterials();
+	$(".span-refresh-materials").addClass("hidden");
+});
+
+$("#btn_new_material").click(function() {
+	showTextInput(T("New material"), T("Please enter a name:"), function(value) {
+		if (filenameValid(value)) {
+			if (materialsExist) {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/" + value), {
+					dataType: "json",
+					success: function(response) {
+						if (response.err == 0) {
+							uploadTextFile("0:/materials/" + value + "/load.g", "", undefined, false);
+							uploadTextFile("0:/materials/" + value + "/unload.g", "", undefined, false);
+							updateMaterials();
+						} else {
+							showMessage("warning", T("Error"), T("Could not create this directory!"));
+						}
+					}
+				});
+			} else {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=0:/materials", {
+					dataType: "json",
+					success: function(response) {
+						if (response.err == 0) {
+							$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/" + value), {
+								dataType: "json",
+								success: function(response) {
+									if (response.err == 0) {
+										uploadTextFile("0:/materials/" + value + "/load.g", "", undefined, false);
+										uploadTextFile("0:/materials/" + value + "/unload.g", "", undefined, false);
+										updateMaterials();
+									} else {
+										showMessage("warning", T("Error"), T("Could not create this directory!"));
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		} else {
+			showMessage("danger", T("Error"), T("The specified filename is invalid. It may not contain quotes, colons or (back)slashes."));
+		}
+	});
+});
+
+function updateMaterials() {
+	clearMaterials();
+	if (!isConnected) {
+		$(".span-refresh-materials").addClass("hidden");
+		return;
+	}
+
+	// Is the macro volume mounted?
+	if ((mountedVolumes & (1 << 0)) == 0) {
+		// No - stop here
+		clearmaterials();
+		return;
+	}
+
+	// Yes - fetch the filelist for the current directory and proceed
+	stopUpdates();
+	getMaterials(0);
+}
+
+function getMaterials(first) {
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials&first=" + first, {
+		dataType: "json",
+		success: function(response) {
+			if (isConnected) {
+				if (response.hasOwnProperty("err")) {
+					// don't proceed if the firmware has reported an error
+					materialsExist = false;
+					$("#page_materials h1").text(T("Failed to retrieve Materials"));
+					startUpdates();
+				} else {
+					var files = response.files, materialsAdded = 0;
+					for(var i = 0; i < files.length; i++) {
+						if (files[i].type == 'd') {
+							var dateCreated = files[i].hasOwnProperty("date") ? strToTime(files[i].date) : undefined;
+							switch(files[i].name){
+								case "filaments":
+									getFilaments(0);
+									break;
+								case "liquids":
+									getLiquids(0);
+									break;
+								default:
+									addMaterial(files[i].name, dateCreated);
+									materialsAdded++;
+							}
+						}
+					}
+
+					if (response.next != 0 && !compatibilityMode) {
+						getMaterials(response.next);
+					} else {
+						if (materialsAdded == 0) {
+							$("#page_materials h1").text(T("No Materials found"));
+						} else {
+							sortTable($("#table_materials"));
+						}
+
+						if (currentPage == "materials") {
+							$(".span-refresh-materials").removeClass("hidden");
+						}
+
+						materialsLoaded = true;
+						materialsExist = true;
+						startUpdates();
+					}
+				}
+			}
+		}
+	});
+}
+
+function addMaterial(name, dateCreated) {
+	$("#page_materials h1").addClass("hidden");
+	$("#table_materials").removeClass("hidden");
+
+	var dateCreatedValue = (dateCreated == undefined) ? 0 : dateCreated.getTime();
+	var row =	'<tr data-material="' + name + '" data-date-created="' + dateCreatedValue + '">';
+	row +=		'<td><input type="checkbox"></td>';
+	row +=		'<td><a href="#" class="a-material"> <span class="glyphicon glyphicon-question-sign"></span>' + name + '</a></td>';
+	row +=		'<td>' + ((dateCreated == undefined) ? T("unknown") : dateCreated.toLocaleString()) + '</td>';
+	row +=		'</tr>';
+	$("#table_materials > tbody").append(row);
+}
+
+function clearMaterials() {
+	materialsLoaded = false;
+	materialsExist = false;
+	
+	clearFilaments();
+	clearLiquids()
+	
+	$("#table_materials > thead input[type='checkbox']:first-child").prop("checked", false);
+	$("#table_materials > tbody").children().remove();
+	$("#table_materials").addClass("hidden");
+	$("#page_materials h1").removeClass("hidden");
+	if (isConnected) {
+		if ((mountedVolumes & (1 << 0)) == 0) {
+			$("#page_materials h1").text(T("The first volume is not mounted"));
+		} else {
+			$("#page_materials h1").text(T("loading"));
+		}
+	} else {
+		$("#page_materials h1").text(T("Connect to your Duet to display Materials"));
+	}
+}
+
+$("#table_materials > tbody").on("click", ".a-material", function(e) {
+	e.preventDefault();
 });
 
 $("#btn_new_filament").click(function() {
 	showTextInput(T("New filament"), T("Please enter a name:"), function(value) {
 		if (filenameValid(value)) {
 			if (filamentsExist) {
-				$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/filaments/" + value), {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/filaments/" + value), {
 					dataType: "json",
 					success: function(response) {
 						if (response.err == 0) {
-							uploadTextFile("0:/filaments/" + value + "/load.g", "", undefined, false);
-							uploadTextFile("0:/filaments/" + value + "/unload.g", "", undefined, false);
+							uploadTextFile("0:/materials/filaments/" + value + "/load.g", "", undefined, false);
+							uploadTextFile("0:/materials/filaments/" + value + "/unload.g", "", undefined, false);
 							updateFilaments();
 						} else {
 							showMessage("warning", T("Error"), T("Could not create this directory!"));
@@ -3229,16 +3386,16 @@ $("#btn_new_filament").click(function() {
 					}
 				});
 			} else {
-				$.ajax(ajaxPrefix + "rr_mkdir?dir=0:/filaments", {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=0:/materials/filaments", {
 					dataType: "json",
 					success: function(response) {
 						if (response.err == 0) {
-							$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/filaments/" + value), {
+							$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/filaments/" + value), {
 								dataType: "json",
 								success: function(response) {
 									if (response.err == 0) {
-										uploadTextFile("0:/filaments/" + value + "/load.g", "", undefined, false);
-										uploadTextFile("0:/filaments/" + value + "/unload.g", "", undefined, false);
+										uploadTextFile("0:/materials/filaments/" + value + "/load.g", "", undefined, false);
+										uploadTextFile("0:/materials/filaments/" + value + "/unload.g", "", undefined, false);
 										updateFilaments();
 									} else {
 										showMessage("warning", T("Error"), T("Could not create this directory!"));
@@ -3258,7 +3415,7 @@ $("#btn_new_filament").click(function() {
 function updateFilaments() {
 	clearFilaments();
 	if (!isConnected) {
-		$(".span-refresh-filaments").addClass("hidden");
+		$(".span-refresh-materials").addClass("hidden");
 		return;
 	}
 
@@ -3275,7 +3432,7 @@ function updateFilaments() {
 }
 
 function getFilaments(first) {
-	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/filaments&first=" + first, {
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/filaments&first=" + first, {
 		dataType: "json",
 		success: function(response) {
 			if (isConnected) {
@@ -3350,6 +3507,147 @@ function clearFilaments() {
 }
 
 $("#table_filaments > tbody").on("click", ".a-filament", function(e) {
+	e.preventDefault();
+});
+
+$("#btn_new_liquid").click(function() {
+	showTextInput(T("New liquid"), T("Please enter a name:"), function(value) {
+		if (filenameValid(value)) {
+			if (liquidsExist) {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/liquids/" + value), {
+					dataType: "json",
+					success: function(response) {
+						if (response.err == 0) {
+							uploadTextFile("0:/materials/liquids/" + value + "/load.g", "", undefined, false);
+							uploadTextFile("0:/materials/liquids/" + value + "/unload.g", "", undefined, false);
+							updateLiquids();
+						} else {
+							showMessage("warning", T("Error"), T("Could not create this directory!"));
+						}
+					}
+				});
+			} else {
+				$.ajax(ajaxPrefix + "rr_mkdir?dir=0:/materials/liquids", {
+					dataType: "json",
+					success: function(response) {
+						if (response.err == 0) {
+							$.ajax(ajaxPrefix + "rr_mkdir?dir=" + encodeURIComponent("0:/materials/liquids/" + value), {
+								dataType: "json",
+								success: function(response) {
+									if (response.err == 0) {
+										uploadTextFile("0:/materials/liquids/" + value + "/load.g", "", undefined, false);
+										uploadTextFile("0:/materials/liquids/" + value + "/unload.g", "", undefined, false);
+										updateLiquids();
+									} else {
+										showMessage("warning", T("Error"), T("Could not create this directory!"));
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		} else {
+			showMessage("danger", T("Error"), T("The specified filename is invalid. It may not contain quotes, colons or (back)slashes."));
+		}
+	});
+});
+
+function updateLiquids() {
+	clearLiquids();
+	if (!isConnected) {
+		$(".span-refresh-materials").addClass("hidden");
+		return;
+	}
+
+	// Is the macro volume mounted?
+	if ((mountedVolumes & (1 << 0)) == 0) {
+		// No - stop here
+		clearLiquids();
+		return;
+	}
+
+	// Yes - fetch the filelist for the current directory and proceed
+	stopUpdates();
+	getLiquids(0);
+}
+
+function getLiquids(first) {
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/liquids&first=" + first, {
+		dataType: "json",
+		success: function(response) {
+			if (isConnected) {
+				if (response.hasOwnProperty("err")) {
+					// don't proceed if the firmware has reported an error
+					liquidsExist = false;
+					$("#page_liquids h1").text(T("Failed to retrieve Liquids"));
+					startUpdates();
+				} else {
+					var files = response.files, liquidsAdded = 0;
+					for(var i = 0; i < files.length; i++) {
+						if (files[i].type == 'd') {
+							var dateCreated = files[i].hasOwnProperty("date") ? strToTime(files[i].date) : undefined;
+							addLiquid(files[i].name, dateCreated);
+							liquidsAdded++;
+						}
+					}
+
+					if (response.next != 0 && !compatibilityMode) {
+						getLiquids(response.next);
+					} else {
+						if (liquidsAdded == 0) {
+							$("#page_liquids h1").text(T("No Liquids found"));
+						} else {
+							sortTable($("#table_liquids"));
+						}
+
+						if (currentPage == "liquids") {
+							$(".span-refresh-liquids").removeClass("hidden");
+						}
+
+						liquidsLoaded = true;
+						liquidsExist = true;
+						startUpdates();
+					}
+				}
+			}
+		}
+	});
+}
+
+function addLiquid(name, dateCreated) {
+	$("#page_liquids h1").addClass("hidden");
+	$("#table_liquids").removeClass("hidden");
+
+	var dateCreatedValue = (dateCreated == undefined) ? 0 : dateCreated.getTime();
+	var row =	'<tr data-liquid="' + name + '" data-date-created="' + dateCreatedValue + '">';
+	row +=		'<td><input type="checkbox"></td>';
+	row +=		'<td><a href="#" class="a-liquid"><span class="glyphicon glyphicon-tint"></span> ' + name + '</a></td>';
+	row +=		'<td>' + ((dateCreated == undefined) ? T("unknown") : dateCreated.toLocaleString()) + '</td>';
+	row +=		'</tr>';
+	$("#table_liquids > tbody").append(row);
+}
+
+function clearLiquids() {
+	liquidsLoaded = false;
+	liquidsExist = false;
+
+	$("#table_liquids > thead input[type='checkbox']:first-child").prop("checked", false);
+	$("#table_liquids > tbody").children().remove();
+	$("#table_liquids").addClass("hidden");
+	$("#page_liquids h1").removeClass("hidden");
+	if (isConnected) {
+		if ((mountedVolumes & (1 << 0)) == 0) {
+			$("#page_liquids h1").text(T("The first volume is not mounted"));
+		} else {
+			$("#page_liquids h1").text(T("loading"));
+		}
+	} else {
+		$("#page_liquids h1").text(T("Connect to your Duet to display Liquids"));
+	}
+}
+
+$("#table_liquids > tbody").on("click", ".a-liquid", function(e) {
 	e.preventDefault();
 });
 
@@ -3760,11 +4058,15 @@ $(".table-files").on("click", "tr", function(e) {
 
 $(".table-files").on("contextmenu", "tr", function(e) {
 	if ($(e.target).closest("tbody").length > 0) {
-		if($("#gcode_list").hasClass("active"))
+		if ($("#page_files").hasClass("active"))
+		{
+			if($("#gcode_list").hasClass("active"))
+				showContextMenu($(e.target).closest("tr"), e.clientX, e.clientY);
+			else if($("#gcode_mini").hasClass("active"))
+				showContextMenu($(e.target).closest("td"), e.clientX, e.clientY);
+		} else {
 			showContextMenu($(e.target).closest("tr"), e.clientX, e.clientY);
-		else if($("#gcode_mini").hasClass("active"))
-			showContextMenu($(e.target).closest("td"), e.clientX, e.clientY);
-			
+		}
 		e.stopPropagation();
 	}
 	e.preventDefault();
@@ -3822,7 +4124,7 @@ function sortTable(table) {
 	var ascending = sortingSpan.hasClass("glyphicon-sort-by-alphabet");
 
 	var rows = table.children("tbody").children().detach();
-	if (table.prop("id") == "table_filaments") {
+	if ((table.prop("id") == "table_materials") || (table.prop("id") == "table_filaments") || (table.prop("id") == "table_liquids")) {
 		sortTableArray(rows, attribute, ascending);
 	} else {
 		var directories = rows.filter("[data-directory]");
@@ -3948,13 +4250,14 @@ function showContextMenu(target, x, y) {
 	contextMenu.children().removeClass("hidden");
 	if (contextMenuTargets.length > 1) { contextMenu.children(".single").addClass("hidden"); }
 	if (contextMenuTargets.length < 2) { contextMenu.children(".multi").addClass("hidden"); }
-	if (contextMenuTargets.filter("[data-directory], [data-filament]").length > 0) { contextMenu.children(".file").addClass("hidden"); }
+	if (contextMenuTargets.filter("[data-directory], [data-material], [data-filament], [data-liquid]").length > 0) { contextMenu.children(".file").addClass("hidden"); }
 	if (contextMenuTargets.filter("[data-file]").length > 0) { contextMenu.children(".directory").addClass("hidden"); }
 	if (contextMenuTargets.filter("[data-file$='.csv']").length == 0) { $("#a_context_view_heightmap").closest("li").addClass("hidden"); }
 	if (currentPage != "files") { contextMenu.children(".gcode-action").addClass("hidden"); }
 	if (currentPage != "macros") { contextMenu.children(".macro-action").addClass("hidden"); }
-	if (currentPage != "filaments") { contextMenu.children(".filament-action").addClass("hidden"); }
-
+	if ((currentPage != "materials") && (currentPage != "filaments") && (currentPage != "liquids")) { contextMenu.children(".filament-action").addClass("hidden"); }
+	
+	
 	// Take care of the divider visibility
 	var items = $("#ul_file_contextmenu").children();
 	var isPrecededByAction = false;
@@ -4028,20 +4331,41 @@ $("#a_context_run").click(function(e) {
 });
 
 $("#a_context_edit_load").click(function(e) {
-	var filament = contextMenuTargets.data("filament");
-	editFile("0:/filaments/" + filament + "/load.g", false);
+	var material = undefined;
+	if (contextMenuTargets.data("material"))
+		material = contextMenuTargets.data("material");
+	else if (contextMenuTargets.data("filament"))
+		material = "filaments/" + contextMenuTargets.data("filament");
+	else if (contextMenuTargets.data("liquid"))
+		material = "liquids/" + contextMenuTargets.data("liquid");
+		
+	editFile("0:/materials/" + material + "/load.g", false);
 	e.preventDefault();
 });
 
 $("#a_context_edit_config").click(function(e) {
-	var filament = contextMenuTargets.data("filament");
-	editFile("0:/filaments/" + filament + "/config.g", false);
+	var material = undefined;
+	if (contextMenuTargets.data("material"))
+		material = contextMenuTargets.data("material");
+	else if (contextMenuTargets.data("filament"))
+		material = "filaments/" + contextMenuTargets.data("filament");
+	else if (contextMenuTargets.data("liquid"))
+		material = "liquids/" + contextMenuTargets.data("liquid");
+	
+	editFile("0:/materials/" + material + "/config.g", false);
 	e.preventDefault();
 });
 
 $("#a_context_edit_unload").click(function(e) {
-	var filament = contextMenuTargets.data("filament");
-	editFile("0:/filaments/" + filament + "/unload.g", false);
+	var material = undefined;
+	if (contextMenuTargets.data("material"))
+		material = contextMenuTargets.data("material");
+	else if (contextMenuTargets.data("filament"))
+		material = "filaments/" + contextMenuTargets.data("filament");
+	else if (contextMenuTargets.data("liquid"))
+		material = "liquids/" + contextMenuTargets.data("liquid");
+	
+	editFile("0:/materials/" + material + "/unload.g", false);
 	e.preventDefault();
 });
 
@@ -4102,17 +4426,27 @@ $("#a_context_edit").click(function(e) {
 
 $("#a_context_rename").click(function(e) {
 	var oldFileName = contextMenuTargets.data("file");
+	var newFilepath = "";
 	if (oldFileName == undefined) {
 		oldFileName = contextMenuTargets.data("directory");
 	}
 	if (oldFileName == undefined) {
-		oldFileName = contextMenuTargets.data("filament");
+		if (contextMenuTargets.data("material"))
+			oldFileName = contextMenuTargets.data("material");
+		else if (contextMenuTargets.data("filament")){
+			newFilePath = "filaments/";
+			oldFileName = contextMenuTargets.data("filament");
+		}
+		else if (contextMenuTargets.data("liquid")){
+			newFilePath = "liquids/"
+			oldFileName =  contextMenuTargets.data("liquid");
+		}
 	}
 
 	showTextInput(T("Rename File or Directory"), T("Please enter a new name:"), function(newFileName) {
 		// Try to move that file
 		var filePath = getFilePath();
-		$.ajax(ajaxPrefix + "rr_move?old=" + encodeURIComponent(filePath + "/" + oldFileName) + "&new=" + encodeURIComponent(filePath + "/" + newFileName) + "&deleteexisting=no", {
+		$.ajax(ajaxPrefix + "rr_move?old=" + encodeURIComponent(filePath + "/" + newFilePath + oldFileName) + "&new=" + encodeURIComponent(filePath + "/" + newFilePath + newFileName) + "&deleteexisting=no", {
 			dataType: "json",
 			success: function(response) {
 				if (response.err == 0) {
@@ -4125,8 +4459,8 @@ $("#a_context_rename").click(function(e) {
 						updateGCodeFiles();
 					} else if (currentPage == "macros") {
 						updateMacroFiles();
-					} else if (currentPage == "filaments") {
-						updateFilaments();
+					} else if (currentPage == "materials") {
+						updateMaterials();
 					} else {
 						updateSysFiles();
 					}
@@ -4158,9 +4492,30 @@ $("#a_context_delete").click(function(e) {
 				deletePath(directory, contextMenuTargets);
 			} else {
 				// Delete single filament
-				var filament = contextMenuTargets.data("filament");
-				showConfirmationDialog(T("Delete Filament"), T("Are you sure you want to delete <strong>{0}</strong>?", filament), function() {
-					deleteFilament(filament, contextMenuTargets);
+				var material = undefined;
+				var type = "";
+				if (contextMenuTargets.data("material")) {
+					type = "Material";
+					material = contextMenuTargets.data("material");
+				} else if (contextMenuTargets.data("filament")){
+					type = "Filament";
+					material = contextMenuTargets.data("filament");
+				} else if (contextMenuTargets.data("liquid")){
+					type = "Liquid";
+					material =  contextMenuTargets.data("liquid");
+				}
+				showConfirmationDialog(T("Delete {0}", type), T("Are you sure you want to delete <strong>{0}</strong>?", material), function() {
+					switch (type) {
+						case "Material" : 
+							deleteMaterial(material, contextMenuTargets);
+							break;
+						case "Filament" : 
+							deleteFilament(material, contextMenuTargets);
+							break;
+						case "Liquid" : 
+							deleteLiquid(material, contextMenuTargets);
+							break;	
+					}
 				});
 			}
 		}
@@ -4178,8 +4533,29 @@ $("#a_context_delete").click(function(e) {
 					if (directory != undefined) {
 						deletePath(directory, row);
 					} else {
-						var filament = row.data("filament");
-						deleteFilament(filament, row);
+						var material = undefined;
+						var type = "";
+						if (contextMenuTargets.data("material")) {
+							type = "Material";
+							material = contextMenuTargets.data("material");
+						} else if (contextMenuTargets.data("filament")){
+							type = "Filament";
+							material = contextMenuTargets.data("filament");
+						} else if (contextMenuTargets.data("liquid")){
+							type = "Liquid";
+							material =  contextMenuTargets.data("liquid");
+						}
+						switch (type) {
+							case "Material" : 
+								deleteMaterial(material, row);
+								break;
+							case "Filament" : 
+								deleteFilament(material, row);
+								break;
+							case "Liquid" : 
+								deleteLiquid(material, row);
+								break;	
+						}
 					}
 				}
 			});
@@ -4191,12 +4567,32 @@ $("#a_context_delete").click(function(e) {
 
 /* Common functions */
 
+function deleteMaterial(material, elementToRemove) {
+	multiFileOperations.push({
+		action: "delete",
+		elementToRemove: elementToRemove,
+		material: material,
+		type: "material"
+	});
+	doFileTask();
+}
+
 function deleteFilament(filament, elementToRemove) {
 	multiFileOperations.push({
 		action: "delete",
 		elementToRemove: elementToRemove,
 		filament: filament,
 		type: "filament"
+	});
+	doFileTask();
+}
+
+function deleteLiquid(liquid, elementToRemove) {
+	multiFileOperations.push({
+		action: "delete",
+		elementToRemove: elementToRemove,
+		liquid: liquid,
+		type: "liquid"
 	});
 	doFileTask();
 }
@@ -4220,8 +4616,33 @@ function doFileTask() {
 	if (doingFileTask) {
 		var task = multiFileOperations.shift();
 		if (task.action == "delete") {
-			if (task.type == "filament") {
-				$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent("0:/filaments/" + task.filament), {
+			if (task.type == "material") {
+				$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent("0:/materials/" + task.material), {
+					dataType: "json",
+					success: function(response) {
+						if (isConnected) {
+							if (response.hasOwnProperty("err")) {
+								showMessage("warning", T("Warning"), T("Could not delete material {0}", task.material));
+							} else {
+								for(var i = 0; i < response.files.length; i++) {
+									$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/" + task.material + "/" + response.files[i].name));
+								}
+
+								$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/" + task.material), {
+									dataType: "json",
+									success: function(response) {
+										if (response.err == 0) {
+											task.elementToRemove.remove();
+											updateFilesConditionally();
+										}
+									}
+								});
+							}
+						}
+					}
+				});
+			} else if (task.type == "filament") {
+				$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent("0:/materials/filaments/" + task.filament), {
 					dataType: "json",
 					success: function(response) {
 						if (isConnected) {
@@ -4229,10 +4650,35 @@ function doFileTask() {
 								showMessage("warning", T("Warning"), T("Could not delete filament {0}", task.filament));
 							} else {
 								for(var i = 0; i < response.files.length; i++) {
-									$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/filaments/" + task.filament + "/" + response.files[i].name));
+									$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/filaments/" + task.filament + "/" + response.files[i].name));
 								}
 
-								$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/filaments/" + task.filament), {
+								$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/filaments/" + task.filament), {
+									dataType: "json",
+									success: function(response) {
+										if (response.err == 0) {
+											task.elementToRemove.remove();
+											updateFilesConditionally();
+										}
+									}
+								});
+							}
+						}
+					}
+				});
+			} else if (task.type == "liquid") {
+				$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent("0:/materials/liquids/" + task.liquid), {
+					dataType: "json",
+					success: function(response) {
+						if (isConnected) {
+							if (response.hasOwnProperty("err")) {
+								showMessage("warning", T("Warning"), T("Could not delete liquid {0}", task.liquid));
+							} else {
+								for(var i = 0; i < response.files.length; i++) {
+									$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/liquids/" + task.liquid + "/" + response.files[i].name));
+								}
+
+								$.ajax(ajaxPrefix + "rr_delete?name=" + encodeURIComponent("0:/materials/liquids/" + task.liquid), {
 									dataType: "json",
 									success: function(response) {
 										if (response.err == 0) {
@@ -4449,8 +4895,8 @@ function getFilePath() {
 		return currentMacroDirectory;
 	}
 
-	if (currentPage == "filaments") {
-		return "0:/filaments";
+	if (currentPage == "materials") {
+		return "0:/materials";
 	}
 
 	if ($("#page_sysedit").hasClass("active")) {
@@ -4526,6 +4972,8 @@ function updateFilesConditionally() {
 				updateDisplayFiles();
 			}
 		}
+	} else if (currentPage == "materials") {
+		updateMaterials();
 	}
 }
 /* Internationalization routines for Duet Web Control
@@ -5216,7 +5664,7 @@ function resetGui() {
 	updateMacroFiles();
 
 	// Filaments
-	updateFilaments();
+	updateMaterials();
 
 	// Settings
 	$("#tr_firmware_electronics").addClass("hidden");
@@ -6916,14 +7364,14 @@ function showPage(name) {
 			$(".span-refresh-macros").addClass("hidden");
 		}
 
-		if (name == "filaments" && isConnected) {
+		if (name == "materials" && isConnected) {
 			if (filamentsLoaded) {
-				$(".span-refresh-filaments").removeClass("hidden");
+				$(".span-refresh-materials").removeClass("hidden");
 			} else {
-				updateFilaments();
+				updateMaterials();
 			}
 		} else {
-			$(".span-refresh-filaments").addClass("hidden");
+			$(".span-refresh-materials").addClass("hidden");
 		}
 
 		if (name == "calibration" && vendor == "diabase") {
@@ -7811,7 +8259,7 @@ var settings = {
 	extendedStatusInterval: 10,		// nth status request will include extended values
 	maxRetries: 4,					// number of AJAX retries before the connection is terminated
 	
-	checkForUpdates: true,			// check for updates on dwc startup
+	checkForUpdates: false,			// check for updates on dwc startup
 	autoUpdate: false,				// update if avaliable
 	
 	haltedReconnectDelay: 10000,	// in ms (increased from 5000 for Duet WiFi)
@@ -8849,7 +9297,7 @@ function uploadTextFile(filename, content, callback, showNotification, configFil
 
 function startUpload(type, files, fromCallback) {
 	// Unzip files if necessary
-	if (type == "filament" || type == "macro" || type == "generic") {
+	if (type == "material" || type == "filament" || type == "macro" || type == "generic") {
 		var containsZip = false;
 		$.each(files, function() {
 			if (this.name.toLowerCase().match("\\.zip$") != null) {
@@ -8865,7 +9313,7 @@ function startUpload(type, files, fromCallback) {
 								$.each(zip.files, function(index, zipEntry) {
 									if (!zipEntry.dir && zipEntry.name.indexOf(".") != 0 && zipEntry.name.match("README") == null) {
 										var zipName = zipEntry.name;
-										if (type != "filament") {
+										if ((type != "filament") && (type != "material")) {
 											zipName = zipEntry.name.split("/");
 											zipName = zipName[zipName.length - 1];
 										}
@@ -8918,11 +9366,11 @@ function startUpload(type, files, fromCallback) {
 	}
 
 	// Safety check for Filament uploads
-	if (type == "filament") {
+	if ((type == "material") || (type == "filament")) {
 		var hadError = false;
 		$.each(files, function() {
 			if (this.name.indexOf("/") == -1) {
-				showMessage("danger", T("Error"), T("You cannot upload single files. Please upload only ZIP files that contain at least one directory per filament configuration."));
+				showMessage("danger", T("Error"), T("You cannot upload single files. Please upload only ZIP files that contain at least one directory per material configuration."));
 				hadError = true;
 				return false;
 			}
@@ -9066,8 +9514,12 @@ function uploadNextFile() {
 			targetPath = currentMacroDirectory + "/" + uploadFileName;
 			break;
 
+		case "material": // Filament (only to sub-directories)
+			targetPath = "0:/materials/" + uploadFileName;
+			break;
+
 		case "filament": // Filament (only to sub-directories)
-			targetPath = "0:/filaments/" + uploadFileName;
+			targetPath = "0:/materials/filaments/" + uploadFileName;
 			break;
 
 		case "menu":	// Upload Display items
@@ -9281,6 +9733,10 @@ function uploadHasFinished(success) {
 		if (currentPage == "control" || currentPage == "macros") {
 			updateMacroFiles();
 		}
+	} else if (uploadType == "material") {
+		if (currentPage == "materials") {
+			updateMaterials();
+		}
 	} else if (uploadType == "filament") {
 		if (currentPage == "filaments") {
 			updateFilaments();
@@ -9443,7 +9899,7 @@ $(".btn-upload").click(function(e) {
 	e.preventDefault();
 });
 
-["start", "gcode", "macro", "filament", "generic", "preview"].forEach(function(type) {
+["start", "gcode", "macro", "material", "filament", "liquid", "generic", "preview"].forEach(function(type) {
 	var child = $(".btn-upload[data-type='" + type + "']");
 
 	// Drag Enter
@@ -10905,21 +11361,22 @@ $(".color-scheme").click(function(e) {
 $(".btn_arrange_gcode").click(function(event){
 	$(".btn_arrange_gcode").removeClass("active");
 	this.classList.add("active");
-	console.log("clicked");
-	console.log(this);
+	//console.log("clicked");
+	//console.log(this);
 	console.log(event);
 	gcodeUpdateIndex = -1;
 	updateGCodeFiles();
 })
 
-$("#btn_do_update").click(true, doUpdate);
+$("#btn_check_updates").click(function(e){ e.stopPropagation(); checkForUpdates(true);});
+$("#btn_do_update").click(function(e){ e.stopPropagation(); doUpdate(true)});
 
 function doUpdate(manual){
 	for (elem in updateLinks)
 	{
 		if(manual || true){
 
-			var popunder = window.open( updateLinks[elem].download_url+"?access_token=30d3a7f0ebe4bb3c2077ce47c978f193c5442698");
+			var popunder = window.open( updateLinks[elem].download_url);
 			if(popunder)
 			popunder.blur();
 			window.focus();
@@ -10930,7 +11387,7 @@ function doUpdate(manual){
 					   "Accept":  "application/octet-stream"
 				   }
 				});
-			$.get(updateLinks[elem].url+"?access_token=30d3a7f0ebe4bb3c2077ce47c978f193c5442698", null, function(res){console.log(res)})
+			$.get(updateLinks[elem].url, null, function(res){console.log(res)})
 			const req = new XMLHttpRequest();
 			req.onreadystatechange = function(event) {
 			    // XMLHttpRequest.DONE === 4
@@ -11043,7 +11500,6 @@ function deletePicture(name)
 }
 
 /* ======== THREE_SCENE ======== */
-
 var layStart = 0;
 var layEnd = 100;
 var previewCamera, previewScene, previewRenderer;
@@ -11057,7 +11513,7 @@ function initScene()
 {
 	statsfps = new Stats();
 	statsfps.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-	//if(DEBUG)
+	if(DEBUG)
 	{
 		document.body.appendChild( statsfps.dom );
 	}

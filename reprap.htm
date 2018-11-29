@@ -55,7 +55,7 @@
 
 				<div class="list-group">
 					<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
-					<a class="navlink list-group-item" href="#" data-target="equipments_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="equipement_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
@@ -869,11 +869,11 @@
 
 							<div class="list-group">
 								<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="equipments_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="equipement_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Fabrication <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="gestion_fab"><span class="glyphicon glyphicon-cd"></span> Fabrication <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 								<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 							</div>
@@ -2052,8 +2052,8 @@
 										</tr>
 										<tr>
 											<td>
-												<button id= "gcode_list" class="btn btn_arrange_gcode"> <span class="glyphicon glyphicon-th-list"  style="transform: scale(1.75);margin: 8px;"></span></button>
-												<button id="gcode_mini" class="btn btn_arrange_gcode active"> <span class="glyphicon glyphicon-th-large" style="transform: scale(1.75);margin: 8px;"></span></button>
+												<button id= "gcode_list" class="btn btn_arrange_gcode active"> <span class="glyphicon glyphicon-th-list"  style="transform: scale(1.75);margin: 8px;"></span></button>
+												<button id="gcode_mini" class="btn btn_arrange_gcode"> <span class="glyphicon glyphicon-th-large" style="transform: scale(1.75);margin: 8px;"></span></button>
 											</td>
 										</tr>
 									</table>
@@ -2146,25 +2146,27 @@
 							<form id="frm_material">
 							<!-- Page Selector (Desktop) -->
 								<ul class="nav nav-tabs hidden-xs hidden-sm">
-									<li id="tab_material" class=" active"><a href="#page_material" data-toggle="tab">Materials</a></li>
-									<li id="tab_filament" class="li-display hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
-									<li id="tab_liquid" class="li-display hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
-									<li id="tab_pellet" class="li-display hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
-									<li id="tab_fiber" class="li-display hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
-									<li id="tab_hybrid" class="li-display hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
+									<li id="tab_material" class="active"><a href="#page_material" data-toggle="tab">Materials</a></li>
+									<li id="tab_filament" class="hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li id="tab_liquid" class="hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
+									<li id="tab_pellet" class="hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
+									<li id="tab_fiber" class="hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
+									<li id="tab_ceramic" class="hidden"><a href="#page_ceramic" data-toggle="tab">Ceramic</a></li>
+									<li id="tab_hybrid" class="hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
 								</ul>
 
 								<!-- Page Selector (Mobile) -->
 								<ul class="nav nav-tabs visible-xs visible-sm">
 									<li class="active"><a href="#page_material" data-toggle="tab">Materials</a></li>
-									<li><a href="#page_filament" data-toggle="tab">Filament</a></li>
-									<li><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
+									<li class="hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li class="hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
 									<li>
 										<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
 										<ul class="dropdown-menu dropdown-menu-right" id="collapsed">
-											<li><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
-											<li class="li-display hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
-											<li class="li-display hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
+											<li class="hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
+											<li class="hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
+											<li class="hidden"><a href="#page_ceramic" data-toggle="tab">Ceramic</a></li>
+											<li class="hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
 										</ul>
 									</li>
 								</ul>
@@ -2206,7 +2208,7 @@
 								</div>
 							
 								<!-- Filaments  -->
-								<div class="tab-pane row hidden" id="page_filament">
+								<div class="tab-pane row" id="page_filament">
 									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
@@ -2241,7 +2243,7 @@
 								</div>
 								
 								<!-- Liquids  -->
-								<div class="tab-pane row hidden" id="page_liquid">
+								<div class="tab-pane row" id="page_liquid">
 									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
@@ -2276,7 +2278,7 @@
 								</div>
 								
 								<!-- Pellets  -->
-								<div class="tab-pane row hidden" id="page_pellet">
+								<div class="tab-pane row" id="page_pellet">
 									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
@@ -2311,7 +2313,7 @@
 								</div>
 								
 								<!-- Fibers  -->
-								<div class="tab-pane row hidden" id="page_fiber">
+								<div class="tab-pane row" id="page_fiber">
 									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
@@ -2345,8 +2347,43 @@
 									</div>
 								</div>
 								
+								<!-- Ceramics  -->
+								<div class="tab-pane row" id="page_ceramic">
+									<div class="col-md-12">
+									<table class="table-file-navigation">
+										<tr>
+											<td>
+												<ol class="breadcrumb breadcrumb-directory" id="ol_ceramic">
+													<li class="active"><span class="glyphicon glyphicon-folder-open"></span> Ceramics Directory</li>
+												</ol>
+											</td>
+
+											<td class="hidden-xs hidden-sm hidden online-control">
+												<button class="btn btn-primary btn-upload disabled" title="Upload one or more ceramic configurations (drag&amp;drop is supported as well)" data-type="ceramic" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
+											</td>
+											<td class="hidden online-control">
+												<button class="btn btn-info" id="btn_new_ceramic" title="Create a new ceramic configuration"><span class="glyphicon glyphicon-plus"></span> Create new Ceramic</button>
+											</td>
+										</tr>
+									</table>
+
+									<table class="table table-bordered table-files table-hover table-striped hidden" id="table_ceramics">
+										<thead>
+											<tr>
+												<th><input type="checkbox"></th>
+												<th><a href="#" data-attribute="ceramic">Ceramic Name</a> <span class="glyphicon glyphicon-sort-by-alphabet"></span></th>
+												<th><a href="#" data-attribute="date-created">Date Created</a> <span></span></th>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- see JS -->
+										</tbody>
+									</table>
+									</div>
+								</div>
+								
 								<!-- Hybrids  -->
-								<div class="tab-pane row hidden" id="page_hybrid">
+								<div class="tab-pane row" id="page_hybrid">
 									<div class="col-md-12">
 									<table class="table-file-navigation">
 										<tr>
@@ -2386,8 +2423,84 @@
 						<div id="page_equipement_setup" class="page">
 							<div class="row">
 								<div class="col-md-8">
-								
-							<!--  TODO: Define contents -->
+									<div id="div_" class="panel panel-default">
+										<div class="panel-heading">Current config</div>
+										<div class="panel-body">
+										<form action="/action.php" method="post">
+										<div class="form-group">
+										    <label for="selected_tool">Current tool</label>
+										    <select class="form-control" id="selected_tool">
+										      <option>select</option>
+										      <option data-type="filament">Filament 3-in-3-out</option>
+										      <option data-type="liquid">Liquid   1-in-1-out</option>
+										      <option data-type="pellet">Pellet   1-in-1-out</option>
+										    </select>
+										  </div>
+										  <div class="form-group">
+										    <label for="selected_nozzle">Current nozzle</label>
+										    <select class="form-control" id="selected_nozzle">
+										      <option>select</option>
+										      <option data-type="liquid">Cold PTFE 0.4 (Liquid)</option>
+										      <option data-type="filament">Bronze 0.1 (Filament)</option>
+										      <option data-type="filament">Bronze 0.4 (Filament)</option>
+										      <option data-type="filament">Iron   0.2 (Filament)</option>
+										      <option data-type="filament">Iron   0.4 (Filament)</option>
+										    </select>
+										  </div>
+										  <div class="form-group">
+										    <label for="selected_bed">Current bed</label>
+										    <select class="form-control" id="selected_bed">
+										      <option>select</option>
+										      <option data-type="liquid">PETG Blue (Liquid)</option>
+										      <option data-type="filament">Glass (Filament)</option>
+										      <option data-type="filament">PTFE  (Filament)</option>
+										    </select>
+										  </div>
+										  <div class="form-group">
+										    <label for="selected_material">Current Material</label>
+										    <select class="form-control" id="selected_material">
+										      <option>select</option>
+										      <option data-type="liquid">Toothpaste (Liquid)</option>
+										      <option data-type="liquid">Silicon    (Liquid)</option>
+										      <option data-type="liquid">Batter     (Liquid)</option>
+										      <option data-type="filament">PLA  White (Filament)</option>
+										      <option data-type="filament">PLA  Black (Filament)</option>
+										      <option data-type="filament">PEKK Pink  (Filament)</option>
+										    </select>
+										  </div>
+										  <input type="button" >
+										  </form>
+										  <script>
+											  setTimeout( function(){
+											  var opt = ($("#selected_tool > option").sort(function(a, b){return (a.innerHTML>b.innerHTML?1:-1)}));
+											  $("#selected_tool").empty();
+											  $("#selected_tool").html(opt);
+											  opt = ($("#selected_nozzle > option").sort(function(a, b){return (a.innerHTML>b.innerHTML?1:-1)}));
+											  $("#selected_nozzle").empty();
+											  $("#selected_nozzle").html(opt);
+											  opt = ($("#selected_bed > option").sort(function(a, b){return (a.innerHTML>b.innerHTML?1:-1)}));
+											  $("#selected_bed").empty();
+											  $("#selected_bed").html(opt);
+											  opt = ($("#selected_material > option").sort(function(a, b){return (a.innerHTML>b.innerHTML?1:-1)}));
+											  $("#selected_material").empty();
+											  $("#selected_material").html(opt);
+											  $("#selected_tool")[0];
+											  
+											  $("#selected_tool")[0].onchange = function(evt)
+											  {
+												  //console.log(this.selectedOptions[0].dataset.type);
+												  //console.log(evt);
+												  $("#selected_nozzle option[data-type!='"+this.selectedOptions[0].dataset.type+"']").prop("class", "hidden")
+												  $("#selected_bed option[data-type!='"+this.selectedOptions[0].dataset.type+"']").prop("class", "hidden")
+												  $("#selected_material option[data-type!='"+this.selectedOptions[0].dataset.type+"']").prop("class", "hidden")
+												  $("#selected_nozzle option[data-type='"+this.selectedOptions[0].dataset.type+"']").prop("class", "")
+												  $("#selected_bed option[data-type='"+this.selectedOptions[0].dataset.type+"']").prop("class", "")
+												  $("#selected_material option[data-type='"+this.selectedOptions[0].dataset.type+"']").prop("class", "")
+												}
+											  }, 1000);	
+										  </script>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
