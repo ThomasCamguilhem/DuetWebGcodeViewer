@@ -56,9 +56,9 @@
 				<div class="list-group">
 					<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
 					<a class="navlink list-group-item" href="#" data-target="equipement_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-					<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-					<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-					<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item hidden" href="#" data-target="maintnance"><span class="glyphicon glyphicon-wrench"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-comment"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+					<a class="navlink list-group-item disabled" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-stats"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 					<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 					<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 				</div>
@@ -95,7 +95,8 @@
 								<span class="glyphicon glyphicon-dashboard"></span>
 							</button>
 						</div>
-
+						
+						<button type="button" class="btn btn-info btn-login navbar-btn navbar-left"><span class="glyphicon glyphicon-log-in"></span> <span>Log in</span></button>
 						<button type="button" class="btn btn-info btn-connect navbar-btn navbar-left hidden"><span class="glyphicon glyphicon-log-in"></span> <span>Connect</span></button>
 
 						<form class="navbar-form padding-small navbar-left hidden-sm gcode-input" autocomplete="off">
@@ -862,21 +863,25 @@
 							</div>
 
 							<div class="list-group">
-								<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span>Console </a>
+								<a class="navlink list-group-item" href="#" data-target="console"><span class="glyphicon glyphicon-console"></span> Console</a>
 								<a class="navlink list-group-item" href="#" data-target="files"><span class="glyphicon glyphicon-hdd"></span> G-Code Files <span class="glyphicon glyphicon-refresh span-refresh-files hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="macros"><span class="glyphicon glyphicon-link"></span> Macros <span class="glyphicon glyphicon-refresh span-refresh-macros hidden"></span></a>
+								<a class="navlink list-group-item " href="#" data-target="macros"><span class="glyphicon glyphicon-link"></span> Macros <span class="glyphicon glyphicon-refresh span-refresh-macros hidden"></span></a>
 							</div>
-
+			
 							<div class="list-group">
 								<a class="navlink list-group-item" href="#" data-target="materials"><span class="glyphicon glyphicon-cd"></span> / <span class="glyphicon glyphicon-tint"></span> Materials <span class="glyphicon glyphicon-refresh span-refresh-materials hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="equipement_setup"><span class="glyphicon glyphicon-cd"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="maintnance"><span class="glyphicon glyphicon-cd"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-cd"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-cd"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
-								<a class="navlink list-group-item" href="#" data-target="gestion_fab"><span class="glyphicon glyphicon-cd"></span> Fabrication <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item disabled" href="#" data-target="gestion_prod"><span class="glyphicon glyphicon-stats"></span> Gestion de prod <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item disabled" href="#" data-target="gestion_fab"><span class="glyphicon glyphicon-cd"></span> Fabrication <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+							</div>
+			
+							<div class="list-group">
+								<a class="navlink list-group-item" href="#" data-target="equipement_setup"><span class="glyphicon glyphicon-list-alt"></span> Equipment / Setup <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item" href="#" data-target="support_ressources"><span class="glyphicon glyphicon-comment"></span> Support / Ressources <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
+								<a class="navlink list-group-item hidden" href="#" data-target="maintnance"><span class="glyphicon glyphicon-wrench"></span> Maintenance <span class="glyphicon glyphicon-refresh span-refresh-profiles hidden"></span></a>
 								<a class="navlink list-group-item diabase hidden" href="#" data-target="calibration"><span class="glyphicon glyphicon-screenshot"></span> Calibration</a>
 								<a class="navlink list-group-item" href="#" data-target="settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
 							</div>
+							
 						</div>
 					</div>
 
@@ -2109,7 +2114,7 @@
 													</button>
 													<ul class="dropdown-menu dropdown-menu-right">
 														<li><a href="#" id="a_new_macro_directory" title="Create a new directory"><span class="glyphicon glyphicon-folder-open"></span> Directory</a></li>
-														<li><a href="#" id="a_new_macro_file" title="Create a new macro file"><span class="glyphicon glyphicon-file"></span> Macro</a></li>
+														<li class="hidden"><a href="#" id="a_new_macro_file" title="Create a new macro file"><span class="glyphicon glyphicon-file"></span> Macro</a></li>
 													</ul>
 												</div>
 											</td>
@@ -2187,7 +2192,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more materials configurations (drag&amp;drop is supported as well)" data-type="material" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_material" title="Create a new material configuration"><span class="glyphicon glyphicon-plus"></span> Create new Material</button>
+												<button class="btn btn-info hidden" id="btn_new_material" title="Create a new material configuration"><span class="glyphicon glyphicon-plus"></span> Create new Material</button>
 											</td>
 										</tr>
 									</table>
@@ -2222,7 +2227,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more filament configurations (drag&amp;drop is supported as well)" data-type="filament" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_filament" title="Create a new filament configuration"><span class="glyphicon glyphicon-plus"></span> Create new Filament</button>
+												<button class="btn btn-info hidden" id="btn_new_filament" title="Create a new filament configuration"><span class="glyphicon glyphicon-plus"></span> Create new Filament</button>
 											</td>
 										</tr>
 									</table>
@@ -2257,7 +2262,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more liquid configurations (drag&amp;drop is supported as well)" data-type="liquid" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_liquid" title="Create a new liquid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Liquid</button>
+												<button class="btn btn-info hidden" id="btn_new_liquid" title="Create a new liquid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Liquid</button>
 											</td>
 										</tr>
 									</table>
@@ -2292,7 +2297,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more pellet configurations (drag&amp;drop is supported as well)" data-type="pellet" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_pellet" title="Create a new pellet configuration"><span class="glyphicon glyphicon-plus"></span> Create new Pellet</button>
+												<button class="btn btn-info hidden" id="btn_new_pellet" title="Create a new pellet configuration"><span class="glyphicon glyphicon-plus"></span> Create new Pellet</button>
 											</td>
 										</tr>
 									</table>
@@ -2327,7 +2332,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more fiber configurations (drag&amp;drop is supported as well)" data-type="fiber" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_fiber" title="Create a new fiber configuration"><span class="glyphicon glyphicon-plus"></span> Create new Fiber</button>
+												<button class="btn btn-info hidden" id="btn_new_fiber" title="Create a new fiber configuration"><span class="glyphicon glyphicon-plus"></span> Create new Fiber</button>
 											</td>
 										</tr>
 									</table>
@@ -2362,7 +2367,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more ceramic configurations (drag&amp;drop is supported as well)" data-type="ceramic" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_ceramic" title="Create a new ceramic configuration"><span class="glyphicon glyphicon-plus"></span> Create new Ceramic</button>
+												<button class="btn btn-info hidden" id="btn_new_ceramic" title="Create a new ceramic configuration"><span class="glyphicon glyphicon-plus"></span> Create new Ceramic</button>
 											</td>
 										</tr>
 									</table>
@@ -2397,7 +2402,7 @@
 												<button class="btn btn-primary btn-upload disabled" title="Upload one or more hybrid configurations (drag&amp;drop is supported as well)" data-type="hybrid" data-style="btn-primary"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Configuration(s)</button>
 											</td>
 											<td class="hidden online-control">
-												<button class="btn btn-info" id="btn_new_hybrid" title="Create a new hybrid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Hybrid</button>
+												<button class="btn btn-info hidden" id="btn_new_hybrid" title="Create a new hybrid configuration"><span class="glyphicon glyphicon-plus"></span> Create new Hybrid</button>
 											</td>
 										</tr>
 									</table>
@@ -2570,25 +2575,27 @@
 								<ul class="nav nav-tabs hidden-xs hidden-sm">
 									<li class="active"><a href="#page_general" data-toggle="tab">General</a></li>
 									<li><a href="#page_ui" data-toggle="tab">User Interface</a></li>
-									<li><a href="#page_listitems" data-toggle="tab">List Items</a></li>
-									<li><a href="#page_sysedit" data-toggle="tab">System Editor</a></li>
+									<li class="hidden"><a href="#page_listitems" data-toggle="tab">List Items</a></li>
+									<li  class="hidden"><a href="#page_sysedit" data-toggle="tab">System Editor</a></li>
 									<li class="li-display hidden"><a href="#page_display" data-toggle="tab">Display Editor</a></li>
 									<li><a href="#page_machine" data-toggle="tab">Machine Properties</a></li>
-									<li><a href="#page_tools" data-toggle="tab">Tools</a></li>
+									<li class="hidden"><a href="#page_tools" data-toggle="tab">Tools</a></li>
+									<li class="hidden"><a href="#page_user" data-toggle="tab">Users</a></li>
 								</ul>
 
 								<!-- Page Selector (Mobile) -->
 								<ul class="nav nav-tabs visible-xs visible-sm">
 									<li class="active"><a href="#page_general" data-toggle="tab">General</a></li>
 									<li><a href="#page_ui" data-toggle="tab">User Interface</a></li>
-									<li><a href="#page_listitems" data-toggle="tab">List Items</a></li>
+									<li class="hidden"><a href="#page_listitems" data-toggle="tab">List Items</a></li>
 									<li>
 										<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
 										<ul class="dropdown-menu dropdown-menu-right" id="collapsed">
-											<li><a href="#page_sysedit" data-toggle="tab">System Editor</a></li>
+											<li  class="hidden"><a href="#page_sysedit" data-toggle="tab">System Editor</a></li>
 											<li class="li-display hidden"><a href="#page_display" data-toggle="tab">Display Editor</a></li>
 											<li><a href="#page_machine" data-toggle="tab">Machine Properties</a></li>
-											<li><a href="#page_tools" data-toggle="tab">Tools</a></li>
+											<li class="hidden"><a href="#page_tools" data-toggle="tab">Tools</a></li>
+											<li class="hidden"><a href="#page_users" data-toggle="tab">Users</a></li>
 										</ul>
 									</li>
 								</ul>
@@ -2628,7 +2635,7 @@
 												</div>
 											</div>
 
-											<div class="panel panel-default hidden-xs hidden-sm">
+											<div class="panel panel-default hidden-xs hidden-sm hidden">
 												<div class="panel-heading">
 													<span>File Upload for /sys and /www Directories</span>
 												</div>
@@ -2701,10 +2708,7 @@
 													</div>
 												</div>
 											</div>
-										</div>
-										
-										<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-right">
-											<div class="panel panel-default">
+											<div class="panel panel-default hidden">
 												<div class="panel-heading">
 													<span>Updates Preferences</span>
 												</div>
@@ -3456,6 +3460,43 @@
 											</div>
 										</div>
 									</div>
+									
+									<!--  Users -->
+									<div class="tab-pane row" id="page_user">
+										<div class="col-xs-12 col-sm-12 col-md-12 col-lg-8">
+											<div class="panel panel-default" id="gestUser">
+												<div class="panel-heading">
+													<span>Users adiministration</span>
+												</div>
+												<div class="panel-body">
+												<form>
+												<table id="formUser"><tr><td>
+													<label for="userName">User name</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
+													<input type="text" class="form-control" id="userName" title="the name of the user" required onkeyup='var span=$("#userName").parent().find("span");if($("#userName").val() != ""){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
+												</td><td>
+													<label for="userLogin">User login</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
+													<input type="text" class="form-control" id="userLogin" title="Enter a login" required pattern="\w+" onkeyup='var span=$("#userLogin").parent().find("span");if($("#userLogin").val().match(/\w+/)){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
+												</td><td>
+													<label for="userPswd">User password</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
+													<input type="password" class="form-control" id="userPswd" title="Password must contain at least 8 characters, including UPPER/lowercase and numbers" required pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" onkeyup='var span=$("#userPswd").parent().find("span");if($("#userPswd").val().match(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
+												</td><td>
+													<label for="userPswd">Confirm password</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
+													<input type="password" class="form-control" id="userPswd2" title="Please enter the same Password as above" required onkeyup='var span=$("#userPswd2").parent().find("span");if($("#userPswd").val() == $("#userPswd2").val()){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
+												</td><td>
+													<label for="userType">User type</label>
+												<select class="form-control" id="userType" title="the type of the user">
+												      <option data-type="user" title="user by default no 'dangerous' operations allowed">Basic user</option>
+												      <option data-type="advanced" title="formed user has access to some more advanced functions">Advanced/Formed</option>
+												      <option data-type="maintenance" title="official user has access to most of the 'Dangerous' functions">Maintenance</option>
+												    </select>
+												</td><td>
+													<label for="btn_add_user"> </label>
+													<button class="btn btn-success disabled" id="btn_add_user" title="Add new user"><span class="glyphicon glyphicon-plus"></span> Add user</button>
+												</td></tr></table></form>
+												</div>
+											</div>
+										</div>
+									</div>
 								</div>
 
 								<div class="row" id="row_save_settings">
@@ -3513,7 +3554,7 @@
 						</div>
 						<div class="modal-body">
 							<div class="form-group">
-								<label for="input_password">Please enter your password:</label>
+								<label for="input_password">Please enter the board's password:</label>
 								<input type="password" class="form-control" id="input_password">
 							</div>
 						</div>
@@ -4324,6 +4365,33 @@
 						<div class="modal-footer">
 							<button type="button" class="btn btn-danger hidden"  data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
 							<button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> OK</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		
+		<div id="modal_login" class="modal fade">
+			<div class="modal-dialog modal-md">
+				<div class="modal-content">
+					<form id="form_login">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+							<h4 class="modal-title">Login</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="uname"><b>Username</b></label>
+								<input id="uname" class="form-control" type="text" placeholder="Enter Username" name="uname" required>
+							</div>
+							<div class="form-group">
+								<label for="psw"><b>Password</b></label>
+								<input id="psw" class="form-control" type="password" placeholder="Enter Password" name="psw" required>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger"  data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+							<button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span> Submit</button>
 						</div>
 					</form>
 				</div>

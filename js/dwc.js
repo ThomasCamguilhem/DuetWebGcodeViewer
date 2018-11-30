@@ -372,7 +372,32 @@ var hideLastExtruderDrive = false;
 
 var compatibilityMode = false;			// TEMPORARY: Compatibility mode for latest official RRF 2.01
 var lynxterFeatures = {};
-
+var usersList = [{
+	name: "default",
+	id: "default",
+	password: null,
+	rank: "user",
+},{
+	name: "formed User",
+	id: "formed",
+	password: "1234",
+	rank: "advanced",
+},{
+	name: "technical support",
+	id: "techsupp",
+	password: "azerty",
+	rank: "maintenance"
+},{ 
+	name: "Lynxter Dev Team",
+	id: "dev",
+	password: "lynxter",
+	rank: "dev"
+	
+}];
+var curUser = {};
+var advancedUser = false;
+var maintenanceUser = false;
+var devUser = false;
 
 /* AJAX Events */
 
@@ -460,6 +485,21 @@ $(".btn-connect").click(function(e) {
 	}
 	e.preventDefault();
 });
+
+$(".btn-login").click(function(e) {
+	if(!$(this).hasClass("disabled")){
+		if( curUser.id == undefined)
+			showLoginPrompt();
+		else {
+			$(".btn-login").removeClass("btn-danger").removeClass("btn-warning").removeClass("btn-success").addClass("btn-info");
+			curUser = {};
+			$(".btn-login > span:not(.glyphicon)").text(T("Log in"));
+			$(".btn-login > span.glyphicon").removeClass("glyphicon-log-out").addClass("glyphicon-log-in");
+			advancedUser = maintenanceUser = devUser = false;
+			updatePrivileges();
+		}
+	}
+})
 
 function connect(password, regularConnect) {
 	if (regularConnect) {
@@ -4256,7 +4296,7 @@ function showContextMenu(target, x, y) {
 	if (currentPage != "files") { contextMenu.children(".gcode-action").addClass("hidden"); }
 	if (currentPage != "macros") { contextMenu.children(".macro-action").addClass("hidden"); }
 	if ((currentPage != "materials") && (currentPage != "filaments") && (currentPage != "liquids")) { contextMenu.children(".filament-action").addClass("hidden"); }
-	
+	if (!advancedUser){ $("#a_context_edit").closest("li").addClass("hidden"); }
 	
 	// Take care of the divider visibility
 	var items = $("#ul_file_contextmenu").children();
@@ -7619,6 +7659,68 @@ $("#modal_pass_input").on("shown.bs.modal", function() {
 });
 
 
+/* Login prompt */
+
+function showLoginPrompt() {
+	$('#uname').val("");
+	$('#psw').val("");
+	$("#modal_login").modal("show");
+}
+
+$("#form_login").submit(function(e) {
+	e.preventDefault();
+	$("#modal_login").off("hide.bs.modal").modal("hide");
+	checkLogin($("#uname").val(), $("#psw").val());
+});
+
+$("#modal_login").on("shown.bs.modal", function() {
+	$("#uname").focus();
+});
+
+function checkLogin(username, password){
+	console.log("username = "+username+"\npassword = "+password);
+	devUser = false;
+	maintenanceUser = false;
+	advancedUser = false;
+	for (var user in usersList)
+	{
+		if (username == usersList[user].id)
+		{
+			console.log("user trouve")
+			if (password == usersList[user].password)
+			{
+				switch (usersList[user].rank)
+				{
+				case "dev":
+					devUser = true;
+					maintenanceUser = true;
+					advancedUser = true;
+					break;
+				case "maintenance":
+					devUser = false;
+					maintenanceUser = true;
+					advancedUser = true;
+					break;
+				case "advanced":
+					devUser = false;
+					maintenanceUser = false;
+					advancedUser = true;
+					break;
+				case "user":
+					devUser = false;
+					maintenanceUser = false;
+					advancedUser = false;
+					break;
+				}
+				curUser = usersList[user];
+				console.log("authentifié avec succes");
+				break;
+			}
+		}
+	}
+    updatePrivileges();	
+}
+
 /* Filament Change Dialog */
 
 var filamentChangeTool, changingFilament;
@@ -10333,16 +10435,17 @@ function setCurrentTool(toolNumber) {
 
 
 /* Control state management */
-
 function enableControls() {
 	$(".table-axis-positions td").css("cursor", "pointer");
 	$("nav input, #div_tools_heaters input, #div_content input").prop("disabled", false);		// Generic inputs
 	$("#page_tools label").removeClass("disabled");												// and on Settings page
 	$(".machine-button").removeClass("disabled");
 
-	$(".btn-emergency-stop, .gcode-input button[type=submit], .gcode").removeClass("disabled");	// Navbar
+	$(".btn-emergency-stop, .gcode").removeClass("disabled");	// Navbar
 	$(".bed-temp, .gcode, .heater-temp, .btn-upload").removeClass("disabled");					// List items and Upload buttons
-
+	
+	updatePrivileges();
+	
 	$(".mobile-home-buttons button, #btn_homeall, .table-move a").removeClass("disabled");		// Move buttons
 	$("#btn_bed_dropdown").removeClass("disabled");												// Automatic Bed Compensation
 	$("#panel_extrude label.btn, #panel_extrude button").removeClass("disabled");				// Extruder Control
@@ -10400,6 +10503,53 @@ function disableControls() {
 	$(".btn-apply-settings, .btn-reset-settings").toggleClass("disabled", $("[data-setting='settingsOnDuet']").is(":checked"));
 }
 
+function updatePrivileges() {
+
+	if(advancedUser || maintenanceUser || devUser)
+	{
+		$(".btn-login").removeClass("btn-info").addClass("btn-success");
+		$(".btn-login > span:not(.glyphicon)").text(T(curUser.name));
+		$(".btn-login > span.glyphicon").removeClass("glyphicon-log-in").addClass("glyphicon-log-out");
+		$(".gcode-input button[type=submit]").removeClass("disabled");	// Navbar
+		$(".gcode-input input").prop("disabled", false);
+		$("#page_materials .btn-info").removeClass("hidden");
+		$("#page_macros li.hidden").removeClass("hidden").addClass("visible");
+		$("#frm_settings > ul > li:not(.li-display).hidden > a:not([href='#page_sysedit'])").parent().removeClass("hidden").addClass("visible");
+		$("#page_general > div >div:not(.hidden-xs).hidden").removeClass("hidden").addClass("visible");
+	} else {
+		$(".btn-login").removeClass("btn-danger").addClass("btn-info");
+		$(".btn-login > span:not(.glyphicon)").text(T("Log in"));
+		$(".btn-login > span.glyphicon").removeClass("glyphicon-log-out").addClass("glyphicon-log-in");
+		$(".gcode-input button[type=submit]").addClass("disabled");	// Navbar
+		$(".gcode-input input").prop("disabled", true);
+		$("#page_materials .btn-info").addClass("hidden");
+		$("#page_macros li.visible").addClass("hidden").removeClass("visible");
+		$("#frm_settings li:not(.li-display).visible").addClass("hidden").removeClass("visible");
+		$("#page_general > div >div:not(.hidden-xs).visible").addClass("hidden").removeClass("visible");
+	}
+	
+	if(maintenanceUser || devUser)
+	{
+		$(".btn-login").removeClass("btn-success").addClass("btn-warning");
+		$(".btn-login > span:not(.glyphicon)").text(T(curUser.name));
+		$("#frm_settings > ul > li:not(.li-display).hidden > a[href='#page_sysedit']").parent().removeClass("hidden").addClass("visible");
+		$("a[data-target=maintnance]").removeClass("hidden");
+		$("#page_general > div >div.hidden-xs.hidden").removeClass("hidden").addClass("visible");
+	} else {
+		$("#frm_settings > ul > li:not(.li-display).hidden > a[href='#page_sysedit']").parent().addClass("hidden").removeClass("visible");
+		$("a[data-target=maintnance]").addClass("hidden");
+		$("#page_general > div >div.hidden-xs.visible").addClass("hidden").removeClass("visible");
+		
+	}
+	
+	if(devUser)
+	{
+		$(".btn-login").removeClass("btn-warning").addClass("btn-danger");
+		$(".btn-login > span:not(.glyphicon)").text(T(curUser.name));
+		$("#frm_material > ul > li").removeClass("hidden").addClass("visible");
+	}
+
+}
 
 /* Window size queries */
 
