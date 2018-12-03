@@ -3469,8 +3469,8 @@
 													<span>Users adiministration</span>
 												</div>
 												<div class="panel-body">
-												<form>
-												<table id="formUser"><tr><td>
+												<table id="formUser" onkeyup='if(!$("#formUser > tbody > tr > td > span").hasClass("glyphicon-remove")){if($("#btn_add_user").hasClass("disabled")) $("#btn_add_user").removeClass("disabled")}else if(!$("#btn_add_user").hasClass("diasbled")) $("#btn_add_user").addClass("disasbled")'>
+												<tr><td>
 													<label for="userName">User name</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
 													<input type="text" class="form-control" id="userName" title="the name of the user" required onkeyup='var span=$("#userName").parent().find("span");if($("#userName").val() != ""){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
 												</td><td>
@@ -3481,18 +3481,30 @@
 													<input type="password" class="form-control" id="userPswd" title="Password must contain at least 8 characters, including UPPER/lowercase and numbers" required pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" onkeyup='var span=$("#userPswd").parent().find("span");if($("#userPswd").val().match(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
 												</td><td>
 													<label for="userPswd">Confirm password</label><span class="glyphicon glyphicon-remove" style="color: red"></span>
-													<input type="password" class="form-control" id="userPswd2" title="Please enter the same Password as above" required onkeyup='var span=$("#userPswd2").parent().find("span");if($("#userPswd").val() == $("#userPswd2").val()){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
+													<input type="password" class="form-control" id="userPswd2" title="Please enter the same Password as above" required onkeyup='var span=$("#userPswd2").parent().find("span");if(($("#userPswd").val() == $("#userPswd2").val()) && $("#userPswd").parent().find("span").hasClass("glyphicon-ok")){if(span.hasClass("glyphicon-remove")){span.removeClass("glyphicon-remove").addClass("glyphicon-ok");span.prop("style","color:green")}}else if(!span.hasClass("glyphicon-remove")){span.addClass("glyphicon-remove").removeClass("glyphicon-ok");span.prop("style","color:crimson")}'>
 												</td><td>
 													<label for="userType">User type</label>
 												<select class="form-control" id="userType" title="the type of the user">
-												      <option data-type="user" title="user by default no 'dangerous' operations allowed">Basic user</option>
-												      <option data-type="advanced" title="formed user has access to some more advanced functions">Advanced/Formed</option>
-												      <option data-type="maintenance" title="official user has access to most of the 'Dangerous' functions">Maintenance</option>
+												      <option value="user" title="user by default:  no 'dangerous' operations allowed">Basic user</option>
+												      <option value="advanced" title="formed user: has access to some more advanced functions">Advanced/Formed</option>
+												      <option value="maintenance" title="official user: has access to most of the 'Dangerous' functions">Maintenance</option>
 												    </select>
 												</td><td>
 													<label for="btn_add_user"> </label>
 													<button class="btn btn-success disabled" id="btn_add_user" title="Add new user"><span class="glyphicon glyphicon-plus"></span> Add user</button>
-												</td></tr></table></form>
+												</td></tr></table>
+												</div>
+											</div>
+											<div class="panel panel-default">
+												<div class="panel-heading">
+													<span>Users list</span>
+												</div>
+												<div class="panel-body">
+													<table id="userList" class="table table-bordered table-striped">
+													<thead><tr><th> User Name </th><th> User login </th><th> User Password </th><th>User access</th></tr></thead>
+													</table>
+													<button class="btn btn-success disabled" id="btn_update_user" title="Update user"><span class="glyphicon glyphicon-ok"></span> Update user</button>
+												
 												</div>
 											</div>
 										</div>
