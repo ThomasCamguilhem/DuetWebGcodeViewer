@@ -469,7 +469,7 @@ $(".btn-login").click(function(e) {
 	if(usersList.length == 0)
 	{
 		$.get(ajaxPrefix + "rr_download?name=0:/sys/usersList.json", function(res){
-			usersList = res;
+			usersList = JSON.parse(res);
 		})
 	}
 	if(!$(this).hasClass("disabled")){
@@ -2766,6 +2766,8 @@ function updateGCodeFiles() {
 }
 
 function getGCodeFiles(first) {
+	if(first === undefined)
+		return;
 	$.ajax(ajaxPrefix + "rr_files?dir=" + encodeURIComponent(currentGCodeDirectory) + "&first=" + first + "&flagDirs=1", {
 		dataType: "json",
 		success: function(response) {
@@ -3055,7 +3057,9 @@ function updateMacroFiles() {
 }
 
 function getMacroFiles(first) {
-	$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent(currentMacroDirectory) + "&first=" + first, {
+	if(first === undefined)
+		return;
+	$.ajax(ajaxPrefix + "rr_filelist?dir=" + encodeURIComponent(currentMacroDirectory) + "&first=" + (first != undefined ?first:0), {
 		dataType: "json",
 		success: function(response) {
 			if (isConnected) {
@@ -3304,7 +3308,9 @@ function updateMaterials() {
 }
 
 function getMaterials(first) {
-	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials&first=" + first, {
+	if(first === undefined)
+		return;
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials&first=" + (first != undefined ?first:0), {
 		dataType: "json",
 		success: function(response) {
 			if (isConnected) {
@@ -3457,7 +3463,9 @@ function updateFilaments() {
 }
 
 function getFilaments(first) {
-	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/filaments&first=" + first, {
+	if(first === undefined)
+		return;
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/filaments&first=" + (first != undefined ?first:0), {
 		dataType: "json",
 		success: function(response) {
 			if (isConnected) {
@@ -3598,7 +3606,9 @@ function updateLiquids() {
 }
 
 function getLiquids(first) {
-	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/liquids&first=" + first, {
+	if(first === undefined)
+		return;
+	$.ajax(ajaxPrefix + "rr_filelist?dir=0:/materials/liquids&first=" + (first != undefined ?first:0), {
 		dataType: "json",
 		success: function(response) {
 			if (isConnected) {
@@ -7665,7 +7675,7 @@ $("#modal_login").on("shown.bs.modal", function() {
 	$("#uname").focus();
 });
 
-function checkLogin(username, password){
+async function checkLogin(username, password){
 	console.log("username = "+username+"\npassword = "+password);
 	devUser = false;
 	maintenanceUser = false;
@@ -7674,8 +7684,9 @@ function checkLogin(username, password){
 	{
 		if (username == usersList[user].id)
 		{
-			console.log("user trouve")
-			if (password == usersList[user].password)
+			console.log("user trouve");
+			await decrypt_data(user, password);
+			if (password == decrypted_data)
 			{
 				switch (usersList[user].rank)
 				{
@@ -7702,8 +7713,10 @@ function checkLogin(username, password){
 				}
 				curUser = usersList[user];
 				console.log("authentifié avec succes");
-				break;
 			}
+			decrypted_data = null;
+			$("#psw").val("");
+			break;
 		}
 	}
     updatePrivileges();	
@@ -11579,10 +11592,10 @@ $("#btn_add_user").click(function(e){
 		usersList.push({
 			name: $("#userName").val(),
 			id: $("#userLogin").val(),
-			password: $("#userPswd").val(),
 			rank: $("#userType").val(),
 		});
 		updatePrivileges();
+		create_key(usersList.length-1, $("#userPswd").val()).then(function(){
 		$.ajax(ajaxPrefix + "rr_upload?name=" + encodeURIComponent("0:/sys/usersList.json") + "&time=" + encodeURIComponent(timeToStr(new Date())), {
 			data: JSON.stringify(usersList),
 			dataType: "json",
@@ -11591,6 +11604,10 @@ $("#btn_add_user").click(function(e){
 			timeout: 0,
 			type: "POST",
 			global: false,
+		});}, 
+		function(e)
+		{
+			console.log(e)
 		});
 	}
 })
@@ -13410,47 +13427,31 @@ function convertArrayBufferViewtoString(buffer)
     return str;
 }
 
-var password = "password";
+async function create_key(user, password) {
+	if(usersList.length != 0 && usersList[user] != undefined)
+	{
+		await crypto.subtle.digest({name: "SHA-256"}, convertStringToArrayBufferView(password)).then(async function(result){
+		    await window.crypto.subtle.importKey("raw", result, {name: "AES-CBC"}, true, ["encrypt"]).then(async function(e){
+		        await encrypt_data(user, password, e);
+		    }, function(e){
+		        console.log(e);
+		    });
+		
+		});
+	} else {
+		console.log("user not found")
+	}
+}
 
-var keys = null;
-var key = null;
-
-crypto.subtle.digest({name: "SHA-256"}, convertStringToArrayBufferView(password)).then(function(result){
-
-    window.crypto.subtle.importKey("raw", result, {name: "AES-CBC"}, true, ["encrypt", "decrypt"]).then(function(e){
-        key = e;
-
-        encrypt_data();
-    }, function(e){
-            console.log(e);
-    });
-
-});
-
-var vector = crypto.getRandomValues(new Uint8Array(16));  
-
-var data  = "password";
-var encrypted_data = null;
-var outputData = "";
-
-function encrypt_data()
+async function encrypt_data(user, data, key)
 {
-    crypto.subtle.encrypt({name: "AES-CBC", iv: vector}, key, convertStringToArrayBufferView(data)).then(
-        function(result){
-            encrypted_data = new Uint8Array(result);
-            crypto.subtle.exportKey("jwk", key).then(function(res){
-            	var encryptUtils = {
-                		key: res,
-                		iv: vector,
-                		enc_pass: encrypted_data,
-                		enc_len: encrypted_data.length,
-                }
-                outputData = JSON.stringify(encryptUtils);
-            	key = null;
-            	vector = null;
-            	encrypted_data = null;
-                decrypt_data();
-            })
+	var vector = crypto.getRandomValues(new Uint8Array(16));
+    await crypto.subtle.encrypt({name: "AES-CBC", iv: vector}, key, convertStringToArrayBufferView(data)).then(
+        async function(result){
+        	key = null;
+        	usersList[user].password = JSON.parse(JSON.stringify(new Uint8Array(result)));
+        	usersList[user].iv = vector;
+        	vector = null;
         },
         function(e){
             console.log(e.message);
@@ -13460,31 +13461,37 @@ function encrypt_data()
 
 var decrypted_data = null;
 
-
-function decrypt_data()
+async function decrypt_data(user, password)
 {
-	var encryptUtils = JSON.parse(outputData);
-	crypto.subtle.importKey("jwk", encryptUtils.key, {name: "AES-CBC"}, true, ["decrypt"]).then(function(e){
-		key = e;
-		
-		var encrypted_data =  new Uint8Array(encryptUtils.enc_len)
-		for(var i = 0; encryptUtils.enc_pass[i] != undefined; i++)
-			encrypted_data[i] = encryptUtils.enc_pass[i];
-		
-		var vector = new Uint8Array(16);
-		for(var i = 0; encryptUtils.iv[i] != undefined; i++)
-			vector[i] = encryptUtils.iv[i];
-		
-	    crypto.subtle.decrypt({name: "AES-CBC", iv: vector}, key, encrypted_data).then(
-	        function(result){
-	            decrypted_data = new Uint8Array(result);
-	            console.log(convertArrayBufferViewtoString(decrypted_data));
-	           
-	            
-	        },
-	        function(e){
-	            console.log(e.message);
-	        }
-	    );
-	});
+	decrypted_data = null;
+	if(usersList.length != 0 && usersList[user] != undefined && usersList[user].password != undefined)
+	{
+		await crypto.subtle.digest({name: "SHA-256"}, convertStringToArrayBufferView(password)).then(async function(result){
+			await crypto.subtle.importKey("raw", result, {name: "AES-CBC"}, true, ["decrypt"]).then(async function(result){
+				var enc_password = usersList[user].password;
+				var i = 0;for(var x in enc_password)i++;
+				var encrypted_data =  new Uint8Array(i);
+				for(i = 0; enc_password[i] != undefined; i++)
+					encrypted_data[i] = enc_password[i];
+				var vector = new Uint8Array(16);
+				for(i = 0; usersList[user].iv[i] != undefined; i++)
+					vector[i] = usersList[user].iv[i];
+			    await crypto.subtle.decrypt({name: "AES-CBC", iv: vector}, result, encrypted_data).then(
+			        async function(result){
+			            decrypted_data = convertArrayBufferViewtoString(new Uint8Array(result));
+			        },
+			        function(e){
+			            console.log(e.message);
+			        });
+				},
+				function(e){
+			        console.log(e.message);
+				});
+		},
+		function(e){
+	        console.log(e.message);
+	    });
+	} else {
+		console.log("user not found")
+	}
 }
