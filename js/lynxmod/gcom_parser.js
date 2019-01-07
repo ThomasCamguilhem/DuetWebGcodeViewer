@@ -1,8 +1,10 @@
+/* ======== GCOM_PARSER ======== */
+
 var nbLayers = 0;
 var layHeight = 0;
 var curLay;
 var extruders = [];
-var extruder = {name: "", number: undefined, diameter: undefined, width: undefined, primary: false}
+var extruder = {name: "", number: undefined, diameter: undefined, width: undefined, primary: false};
 var extWidth = 0.4;
 
 function decodeCuraCom(args)
@@ -21,7 +23,7 @@ function decodeCuraCom(args)
 				console.log("Layer " + parseInt(args[1]) + "/" + nbLayers+"( "+ Math.round(parseInt(args[1])*layHeight*100)/100 + "/" + Math.round(nbLayers*layHeight*100)/100+"mm )");
 			var layNum = parseInt(args[1]);
 			if (layNum != 0)
-				layers[layNum] = {layerStart: startLayer, layer: layer};
+				gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};
 			curLay = layNum;
 			break;
 		case "LAYER_COUNT" :
@@ -32,7 +34,7 @@ function decodeCuraCom(args)
 		case "TYPE":
 			if(DEBUG)
 				console.log("wall type: " + args[1]);
-			lastPos.t = args[1];
+			lastPos.w = args[1];
 			break;
 		case "TIME_ELAPSED":
 			if(DEBUG)
@@ -92,7 +94,7 @@ function parseSimpCom(args)
 		if (args[0] && args[0].includes('Z = '))
 		{
 			var z = args[0];
-			args[0] = "Z"
+			args[0] = "Z";
 			args.zHeight = z.substring(z.lastIndexOf(' ')+1);
 			//console.log(args);
 		}
@@ -110,7 +112,7 @@ function parseSimpCom(args)
 			var value = parseFloat(tokens[token].substring(1));
 			args[key] = value;
 		}
-		console.log(args);
+		//console.log(args);
 	}
 	
 	switch (args.cmd)
@@ -122,47 +124,47 @@ function parseSimpCom(args)
 		case "bridge":
 			if(DEBUG)
 				console.log("wall type: " + "BRIDGE");
-			lastPos.t = "BRIDGE";
+			lastPos.w = "BRIDGE";
 			break;
 		case "gap fill":
 			if(DEBUG)
 				console.log("wall type: " + "GAP_FILL");
-			lastPos.t = "GAP_FILL";
+			lastPos.w = "GAP_FILL";
 			break;
 		case "skirt":
 			if(DEBUG)
 				console.log("wall type: " + "SKIRT");
-			lastPos.t = "SKIRT";
+			lastPos.w = "SKIRT";
 			break;
 		case "infill":
 			if(DEBUG)
 				console.log("wall type: " + "INFILL");
-			lastPos.t = "INFILL";
+			lastPos.w = "INFILL";
 			break;
 		case "inner perimeter":
 			if(DEBUG)
 				console.log("wall type: " + "INNER_PERIMETER");
-			lastPos.t = "INNER_PERIMETER";
+			lastPos.w = "INNER_PERIMETER";
 			break;
 		case "outer perimeter":
 			if(DEBUG)
 				console.log("wall type: " + "OUTER_PERIMETER" );
-			lastPos.t = "OUTER_PERIMETER";
+			lastPos.w = "OUTER_PERIMETER";
 			break;
 		case "solid layer":
 			if(DEBUG)
 				console.log("wall type: " + "SOLID_LAYER");
-			lastPos.t = "SOLID_LAYER";
+			lastPos.w = "SOLID_LAYER";
 			break;
 		case "support":
 			if(DEBUG)
 				console.log("wall type: " + "SUPPORT");
-			lastPos.t = "SUPPORT";
+			lastPos.w = "SUPPORT";
 			break;
 		case "dense support":
 			if(DEBUG)
 				console.log("wall type: " + "DENSE_SUPPORT");
-			lastPos.t = "DENSE_SUPPORT";
+			lastPos.w = "DENSE_SUPPORT";
 			break;
 			
 		/* ====== LAYERS ====== */
@@ -171,7 +173,7 @@ function parseSimpCom(args)
 				console.log("Layer " + args.layNum +(nbLayers?"/"+nbLayers:""));
 			var layNum = parseInt(args.layNum);
 			if (layNum != 0)
-				layers[layNum] = {layerStart: startLayer, layer: layer};
+				gcodeLayers[layNum] = {gcodeLayerStart: startLayer, gcodeLayer: gcodeLayer};
 			nbLayers++;
 			curLay = layNum;
 			break;
@@ -184,9 +186,9 @@ function parseSimpCom(args)
 		/* ====== TOOLS PARAMETERS ====== */
 		case "tool":
 			if (layHeight === undefined)
-				layHeight = args.H
+				layHeight = args.H;
 			if (extWidth === undefined)
-				extWidth = args.W
+				extWidth = args.W;
 			break;
 		case "extruderName":
 			var i = 0;
@@ -257,24 +259,4 @@ function decodeSlicCom(comLine)
 {
 	if(DEBUG)
 		console.log(comLine);
-}
-
-
-
-function toHMS(time, asStr)
-{
-	var sec = time%60;
-	time = (time-sec)/60
-	var min = time%60;
-	time = (time-min)/60
-	var hour = time%24;
-	time = (time-hour)/24
-	var day = time;
-	if(asStr)
-	{
-		var str = day + "d " + hour + "h " + min +"m " + sec + "s"
-		str = str.replace(/(?:0. )+/, '');
-		return str ;
-	}
-	return{d:day, h:hour, m:min, s:sec}
 }

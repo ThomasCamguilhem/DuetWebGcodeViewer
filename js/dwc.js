@@ -5020,7 +5020,7 @@ function updateFilesConditionally() {
  */
 
 
-var showTranslationWarning = false;		// Set this to "true" if you want to look for missing translation entries
+var showTranslationWarning = true;		// Set this to "true" if you want to look for missing translation entries
 
 var translationData = undefined;
 
