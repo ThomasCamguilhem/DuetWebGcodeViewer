@@ -1,0 +1,258 @@
+
+.navbar-inverse .navbar-toggle .icon-bar-lg {
+  background-color: #fff;
+}
+.navbar-default .navbar-toggle .icon-bar-lg {
+  background-color: #888;
+}
+
+.img_gcode {
+    transition: transform .5s; /* Animation */
+}
+
+.img_gcode:hover {
+  transition: transform .5s; /* Animation */
+  transform: scale(4); /* (400% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+}
+
+.img_confirmation{
+ transform-origin: 40% 0%;
+ transition: transform .5s; /* Animation */
+ margin: 0 auto;
+}
+
+.img_confirmation:hover {
+   transform: scale(6); /* (150% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+}
+
+#layerPreview {
+ transform-origin: 50% 50%;
+ transition: transform .5s; /* Animation */
+ margin: 0 auto;
+}
+
+.udtooltip {
+   position: relative;
+   display: inline-block;
+   border-bottom: 1px dotted black;
+   opacity: 1;
+   width: 155px;
+   margin: 0 14%;
+}
+
+.udtooltip .udtooltip-right{
+ top: -5px;
+ left: 105%;
+}
+
+.udtooltip .udtooltip-left{
+ top: -5px;
+ right: 105%;
+}
+
+.udtooltip .udtooltip-top{
+ width: 270px;
+ bottom: 100%;
+ left: 50%;
+ margin-left: -135px
+}
+
+.udtooltip .udtooltip-bottom{
+ width: 270px;
+ top: 100%;
+ left: 50%;
+ margin-left: -135px
+}
+
+.udtooltip .udtooltiptext {
+  visibility: hidden;
+ position: absolute;
+ width: 270px;
+ background-color: #555;
+ color: #fff;
+ text-align: center;
+ padding: 5px 0;
+ border-radius: 6px;
+ z-index: 1;
+
+   /* Fade in udtooltip - takes 1 second to go from 0% to 100% opac: */
+ opacity: 0;
+ transition: opacity 1s;
+}
+
+/* Tooltip arrow */
+.udtooltip  .udtooltiptext::after {
+   content: " ";
+   position: absolute;
+   border-width: 5px;
+   border-style: solid;
+   bottom: 100%; /* At the bottom of the udtooltip */
+   left: 50%;
+   margin-left: -5px;
+   border-color: transparent transparent black transparent;
+}
+
+.udtooltip  .udtooltip-top::after{
+ top: 100%; /* At the bottom of the udtooltip */
+   left: 50%;
+   margin-left: -5px;
+   border-color: black transparent transparent transparent;
+}
+
+.udtooltip .udtooltip-bottom::after {
+ bottom: 100%; /* At the bottom of the udtooltip */
+   left: 50%;
+   margin-left: -5px;
+   border-color: transparent transparent black transparent;
+}
+
+.udtooltip .udtooltip-right::after {
+ top: 50%; /* At the bottom of the udtooltip */
+   right: 100%;
+   margin-top: -5px;
+   border-color: transparent black transparent transparent;
+}
+
+.udtooltip .udtooltip-left::after {
+ top: 50%; /* At the bottom of the udtooltip */
+   left: 100%;
+   margin-top: -5px;
+   border-color: transparent transparent transparent black;
+}
+
+.udtooltip:hover .udtooltiptext {
+   visibility: visible;
+   opacity: 1;
+}
+
+.table-gcode{
+  margin-left: 40px;
+  margin-bottom: 95px;
+}
+
+@media (max-width: 810px) {
+  .slider.slider-horizontal .slider-tick,
+  .slider.slider-horizontal .slider-handle {
+    margin-left: -15px !important;
+    margin-top: -5px !important;
+  }
+
+  .slider-handle {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .dropdown-menu {
+    font-size: 20px !important;
+  }
+  .panel-heading > span:not(.label) {
+    font-size: 18px !important;
+  }
+
+  .col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12 {
+    padding-left: 5px;
+  }
+}
+
+.btn-xl,
+.btn-group-xl > .btn {
+  padding: 15px 32px;
+  font-size: 22px !important;
+  font-weight: bold;
+  line-height: 1;
+  border-radius: 9px;
+}
+
+.navbar-toggle .icon-bar-lg {
+  display: block;
+  width: 45px;
+  height: 4px;
+  border-radius: 2px;
+}
+.navbar-toggle .icon-bar-lg + .icon-bar-lg {
+  margin-top: 8px;
+}
+
+@media (max-width: 810px) {
+  .list-group-item {
+    font-size: 22px !important;
+    padding: 15px;
+  }
+}
+
+.panel {
+  margin-bottom: 5px !important;
+}
+.increment-button {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.decrement-button {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+#form_edit_temp > div table {
+  width: 200px;
+  height:200px;
+  margin-left: auto;
+  margin-right: auto;
+  border-collapse: unset;
+}
+#form_edit_temp > div td {
+  text-align: center;
+  font-size: 1.5rem;
+  border: 1px outset black;
+  border-radius: 5px;
+  background: #80808030;
+  /*! border-collapse: unset; */
+}
+
+#form_edit_temp > div td:active{
+  border: 1px inset white;
+}
+#form_edit_temp > div td:hover{
+  border: 1px inset black;
+}
+
+@media(max-width: 810px)
+{
+	.navbar-brand {
+		font-size: 26px;
+	}
+}
+
+#div_content .panel-body {
+	padding: 5px !important;
+}
+
+#div_tools_heaters input[type="number"] {
+  padding: 5px;
+}
+
+.col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12 {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.navbar-brand > img {
+  display: inline;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  background-image: url(../img/logoLynxter.png);
+  background-position: center center;
+  width: 50px;
+  height: 50px;
+  padding-left: 50px;
+  margin-top: -10px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+svg > text {
+  fill: black;
+}
+ svg > path, svg > rect {
+   stroke: black;
+ }

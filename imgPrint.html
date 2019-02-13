@@ -1,0 +1,153 @@
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="velocity.min.js"></script>
+<script>
+$.get("http://192.168.1.40/rr_filelist?dir=0:/www/img/GCodePreview/LynxHead", function(result){
+console.log(result.files);
+	for (var i = 0; i < result.files.length; ++i)
+	{
+		//console.log(result.files[i].name);
+		var img = document.createElement('img')
+		img.src = "http://192.168.1.40/img/GCodePreview/LynxHead/"+result.files[i].name
+		//document.body.append(img);
+	}
+});
+</script>
+
+<svg width="650" height="400">
+  
+  <text x="145" y="40" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: +50</text>
+  <text x="145" y="40" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 200px 200px;">X: +50</text>
+  <text x="145" y="390" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: -50</text>
+  <text x="145" y="40" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 200px 200px;">X: -50</text>
+  <path id="fastYP" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="100" d="M 58 58 A 205 205 0 0 1 342 58 L 307 93 A 150 150 0 0 0 93 93 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="fastXP" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="100" d="M 342 58 A 200 200 0 0 1 342 342 L 307 307 A 150 150 0 0 0 307 93 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="fastYM" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="-100" d="M 342 342 A 205 205 0 0 1 58 342 L 93 307 A 150 150 0 0 0 307 307 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="fastXM" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="-100" d="M 58 342 A 205 205 0 0 1 58 58 L 93 93 A 150 150 0 0 0 93 307 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  
+  <text x="145" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: +10</text>
+  <text x="145" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 200px 200px;">X: +10</text>
+  <text x="145" y="340" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: -10</text>
+  <text x="145" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 200px 200px;">X: -10</text>
+  <path id="mediumYP" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="10" d="M 93 93 A 150 150 0 0 1 307 93 L 271 129 A 100 100 0 0 0 129 129 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="mediumXP" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="10" d="M 307 93 A 150 150 0 0 1 307 307 L 271 271 A 100 100 0 0 0 271 129 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="mediumYM" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="-10" d="M 307 307 A 150 150 0 0 1 93 307 L 129 271 A 100 100 0 0 0 271 271 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="mediumXM" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="-10" d="M 93 307 A 150 150 0 0 1 93 93 L 129 129 A 100 100 0 0 0 129 271 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  
+  <text x="150" y="145" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: +1</text>
+  <text x="150" y="145" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 200px 200px;">X: +1</text>
+  <text x="150" y="280" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">Y: -1</text>
+  <text x="150" y="145" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 200px 200px;">X: -1</text>
+  <path id="slowYP" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="1" d="M 129 129 A 100 100 0 0 1 271 129 L 236 164 A 50 50 0 0 0 164 164 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="slowXP" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="1" d="M 271 129 A 100 100 0 0 1 271 271 L 236 236 A 50 50 0 0 0 236 164 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="slowYM" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="-1" d="M 271 271 A 100 100 0 0 1 129 271 L 164 236 A 50 50 0 0 0 236 236 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="slowXM" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="-1" d="M 129 271 A 100 100 0 0 1 129 129 L 164 164 A 50 50 0 0 0 164 236 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  
+  <text x="172" y="170" style="font-family: Verdana, Arial, Courier, sans-serif;">Y:+0.1</text>
+  <text x="171" y="170" style="font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 200px 200px;">X:+0.1</text>
+  <text x="172" y="240" style="font-family: Verdana, Arial, Courier, sans-serif;">Y:-0.1</text>
+  <text x="173" y="170" style="font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 200px 200px;">X:-0.1</text>
+  <path id="crawlYP" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="0.1" d="M 164 164 A 50 50 0 0 1 236 164 L 200 200 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="crawlXP" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="0.1" d="M 236 164 A 50 50 0 0 1 236 236 L 200 200 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="crawlYM" class="btn btn-default btn-move visible-lg" data-axis-letter="Y" data-amount="-0.1" d="M 236 236 A 50 50 0 0 1 164 236 L 200 200 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  <path id="crawlXM" class="btn btn-default btn-move visible-lg" data-axis-letter="X" data-amount="-0.1" d="M 164 236 A 50 50 0 0 1 164 164 L 200 200 z" stroke="black" stroke-width="2" fill="#00000000"></path>
+  
+  <text x="365" y="045" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">Feed amount</text>
+  <text x="425" y="085" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">100</text>
+  <text x="425" y="135" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;50</text>
+  <text x="425" y="185" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;20</text>
+  <text x="425" y="235" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;10</text>
+  <text x="425" y="285" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;&nbsp;5</text>
+  <text x="425" y="335" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;&nbsp;1</text>
+  <rect x="415" y="050" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">100</rect>
+  <rect x="415" y="100" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">50</rect>
+  <rect x="415" y="150" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">20</rect>
+  <rect x="415" y="200" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">10</rect>
+  <rect x="415" y="250" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">5</rect>
+  <rect x="415" y="300" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">1</rect>
+  
+  <text x="525" y="045" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">Feed rate</text>
+  <text x="545" y="085" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">100</text>
+  <text x="545" y="135" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;50</text>
+  <text x="545" y="185" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;20</text>
+  <text x="545" y="235" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;10</text>
+  <text x="545" y="285" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;&nbsp;5</text>
+  <text x="545" y="335" style="font-size: 1.5rem;font-family: Verdana, Arial, Courier, sans-serif;">&nbsp;&nbsp;1</text>
+  <rect x="535" y="50" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">100</rect>
+  <rect x="535" y="100" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">50</rect>
+  <rect x="535" y="150" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">20</rect>
+  <rect x="535" y="200" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">10</rect>
+  <rect x="535" y="250" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">5</rect>
+  <rect x="535" y="300" width="100" height="50" fill="#00000000" stroke="black" stroke-width="2">1</rect>
+</svg>
+<script>
+var posX = 0;
+var posY = 0;
+var posZ = 500;
+
+var settings = { moveFeedrate : 6000};
+$(".btn-move").on({
+	click: btnMoveMouseClickEvent,
+	mousedown : btnMoveMouseDownEvent,
+	mouseup: btnMoveMouseUpEvent,
+});
+function btnMoveMouseClickEvent(e) {
+	var axis = $(this).data("axis-letter");
+	if (axis == undefined) {
+		var axisNumber = parseInt($(this).data("axis"));
+		axis = axisNames[axisNumber];
+	}
+
+	var moveString = "M120\nG91\nG1 ";
+	moveString += axis + $(this).data("amount");
+	moveString += " F" + settings.moveFeedrate + "\nM121";
+	sendGCode(moveString);
+	e.preventDefault();
+}
+
+function btnMoveMouseDownEvent(target){
+	target = (this.id?this.id:target);
+	if (!target.includes("crawl"))
+	{
+		if (target.includes('fast')){
+			$("#"+target).css('fill', '#FF0000B0');
+			target = target.replace('fast', 'medium')
+		} else if (target.includes('medium'))
+		{
+			$("#"+target).css('fill', '#FF8800B0');
+			target = target.replace('medium', 'slow')
+		} else if (target.includes('slow'))
+		{	
+			$("#"+target).css('fill', '#FFFF00B0');
+			target = target.replace('slow', 'crawl')
+		} 
+		btnMoveMouseDownEvent(target);
+	}
+	else {
+		$("#"+target).css('fill', '#00FF00B0');
+	}
+}
+
+function btnMoveMouseUpEvent(target, recurse){
+	if(!recurse)
+		setTimeout(btnMoveMouseUpEvent, 70, this.id, true);
+	else 
+	{
+		setTimeout( function() {
+			$("#"+target).css('fill', '#00000000');
+			if (!target.includes("crawl"))
+			{
+				if (target.includes('fast'))
+					target = target.replace('fast', 'medium')
+				else if (target.includes('medium'))
+					target = target.replace('medium', 'slow')
+				else if (target.includes('slow'))
+					target = target.replace('slow', 'crawl')
+				btnMoveMouseUpEvent(target, true);
+			}
+		}, 30)
+	}
+}
+function btnMoveMouseClickEvent(e){var s=$(this).data("axis-letter");if(void 0==s){var t=parseInt($(this).data("axis"));s=axisNames[t]}var i="M120\nG91\nG1 ";i+=s+$(this).data("amount"),i+=" F"+settings.moveFeedrate+"\nM121",sendGCode(i),e.preventDefault()}
+function btnMoveMouseDownEvent(e){(e=this.id?this.id:e).includes("crawl")?$("#"+e).css("fill","#00FF00B0"):(e.includes("fast")?($("#"+e).css("fill","#FF0000B0"),e=e.replace("fast","medium")):e.includes("medium")?($("#"+e).css("fill","#FF8800B0"),e=e.replace("medium","slow")):e.includes("slow")&&($("#"+e).css("fill","#FFFF00B0"),e=e.replace("slow","crawl")),btnMoveMouseDownEvent(e))}
+function btnMoveMouseUpEvent(e,s){s?setTimeout(function(){$("#"+e).css("fill","#00000000"),e.includes("crawl")||(e.includes("fast")?e=e.replace("fast","medium"):e.includes("medium")?e=e.replace("medium","slow"):e.includes("slow")&&(e=e.replace("slow","crawl")),btnMoveMouseUpEvent(e,!0))},30):setTimeout(btnMoveMouseUpEvent,70,this.id,!0)}
+</script>

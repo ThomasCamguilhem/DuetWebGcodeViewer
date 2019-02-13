@@ -22,6 +22,7 @@
 		<!-- Favicon -->
 		<link rel="shortcut icon" href="favicon.ico">
 		<!-- CSS -->
+		<link href="css/lynx.css" rel="stylesheet">
 		<link href="css/animate.css" rel="stylesheet">
 		<link href="css/bootstrap.css" rel="stylesheet">
 		<link href="css/bootstrap-slider.css" rel="stylesheet">
@@ -30,7 +31,6 @@
 		<link href="css/layout-sm.css" rel="stylesheet">
 		<link href="css/layout-md.css" rel="stylesheet">
 		<link href="css/layout-lg.css" rel="stylesheet">
-		<link href="css/lynx.css" rel="stylesheet">
 	</head>
 
 	<body>
@@ -2159,9 +2159,9 @@
 							<form id="frm_material">
 							<!-- Page Selector (Desktop) -->
 								<ul class="nav nav-tabs hidden-xs hidden-sm">
-									<li class="tab_material active"><a href="#page_material" data-toggle="tab">Materials</a></li>
-									<li class="tab_filament hidden"><a href="#page_filament" data-toggle="tab"><span class="glyphicon glyphicon-cd"></span> Filament</a></li>
-									<li class="tab_liquid hidden"><a href="#page_liquid" data-toggle="tab"><span class="glyphicon glyphicon-tint"></span> Liquid</a></li>
+									<li id="tab_material" class="active"><a href="#page_material" data-toggle="tab">Materials</a></li>
+									<li id="tab_filament" class="hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li id="tab_liquid" class="hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
 									<li id="tab_pellet" class="hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
 									<li id="tab_fiber" class="hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
 									<li id="tab_ceramic" class="hidden"><a href="#page_ceramic" data-toggle="tab">Ceramic</a></li>
@@ -2170,16 +2170,16 @@
 
 								<!-- Page Selector (Mobile) -->
 								<ul class="nav nav-tabs visible-xs visible-sm">
-									<li class="tab_material active"><a href="#page_material" data-toggle="tab">Materials</a></li>
-									<li class="tab_filament hidden"><a href="#page_filament" data-toggle="tab"><span class="glyphicon glyphicon-cd"></span>Filament</a></li>
-									<li class="tab_liquid hidden"><a href="#page_liquid" data-toggle="tab"><span class="glyphicon glyphicon-tint"><div></div></span>Liquid</a></li>
+									<li class="active"><a href="#page_material" data-toggle="tab">Materials</a></li>
+									<li class="hidden"><a href="#page_filament" data-toggle="tab">Filament</a></li>
+									<li class="hidden"><a href="#page_liquid" data-toggle="tab">Liquid</a></li>
 									<li>
 										<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
 										<ul class="dropdown-menu dropdown-menu-right" id="collapsed">
-											<li id="tab_pellet" class="hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
-											<li id="tab_fiber" class="hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
-											<li id="tab_ceramic" class="hidden"><a href="#page_ceramic" data-toggle="tab">Ceramic</a></li>
-											<li id="tab_hybrid" class="hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
+											<li class="hidden"><a href="#page_pellet" data-toggle="tab">Pellets</a></li>
+											<li class="hidden"><a href="#page_fiber" data-toggle="tab">Fibers</a></li>
+											<li class="hidden"><a href="#page_ceramic" data-toggle="tab">Ceramic</a></li>
+											<li class="hidden"><a href="#page_hybrid" data-toggle="tab">Hybrid</a></li>
 										</ul>
 									</li>
 								</ul>

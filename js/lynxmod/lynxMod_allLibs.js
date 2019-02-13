@@ -41,7 +41,7 @@ function doUpdate(manual){
 			    if (this.readyState === XMLHttpRequest.DONE) {
 			    	if(req.status === 200){
 						console.log("ok " + req.responseText);
-						
+
 						console.log("posting " +res + " to "+ ajaxPrefix+"rr_upload?name=0:/sys/" + updateLinks[elem].name + "&time="+updateLinks[elem].updated)
 						//$.post(ajaxPrefix+"rr_upload?name=0:/sys/" + updateLinks[elem].name + "&time="+updateLinks[elem].updated, res)
 					} else {
@@ -80,7 +80,7 @@ $("#btn_add_user").click(function(e){
 			timeout: 0,
 			type: "POST",
 			global: false,
-		});}, 
+		});},
 		function(e)
 		{
 			console.log(e)
@@ -121,7 +121,7 @@ function getPicture(url, name, pic, size, nbTry) // new feature already deprecat
 			    	  //console.log(this.response)
 			    	  var res = this.response;
 			          var reader = new window.FileReader();
-			          reader.readAsDataURL(res); 
+			          reader.readAsDataURL(res);
 			          reader.onloadend = function() {
 			        	  if(pic)
 			        	  {
@@ -145,7 +145,7 @@ function getPicture(url, name, pic, size, nbTry) // new feature already deprecat
 			{
 				xhr.open("GET", ajaxPrefix + "rr_download?name=" + url + "/" + name);
 			} else {
-				xhr.open("GET", ajaxPrefix + "rr_download?name=0/www/img/GCodePreview/empty_bp.jpg");				
+				xhr.open("GET", ajaxPrefix + "rr_download?name=0/www/img/GCodePreview/empty_bp.jpg");
 			}
 			xhr.send();
 		}
@@ -175,4 +175,54 @@ function deletePicture(name)
 
 function toHMS(r,e){var n=r%60,t=(r=(r-n)/60)%60,a=(r=(r-t)/60)%24,u=r=(r-a)/24;if(e){var c=u+"d "+a+"h "+t+"m "+n+"s";return c=c.replace(/(?:0. )+/,"")}return{d:u,h:a,m:t,s:n}}
 
-initScene();
+function fillInput(event) {
+	let char = event.target.innerHTML
+	if (isNaN(parseInt(char)))
+	{
+		if (char == "X")
+		{
+			$("#modal_edit_temp").modal('hide');
+		}
+		if (char == "V")
+		{
+			$("#modal_edit_temp form").submit()
+		}
+		if (char == "<" || char == "&lt;")
+		{
+			event.target.parentElement.parentElement.parentElement.parentElement.firstElementChild.value = event.target.parentElement.parentElement.parentElement.parentElement.firstElementChild.value.substring(0, event.target.parentElement.parentElement.parentElement.parentElement.firstElementChild.value.length-1);
+		}
+	} else {
+		event.target.parentElement.parentElement.parentElement.parentElement.firstElementChild.value += char;
+	}
+}
+
+function showTemp(caller, name, type){
+	$("#modal_edit_temp input")[0].value = caller.value;
+	$("#modal_edit_temp .headline")[0].innerHTML = "Type the "+type+" temperature for " +name;
+	$("#modal_edit_temp").modal('show');
+	$("#form_edit_temp").submit(function(event){
+		caller.value = 	$("#modal_edit_temp input")[0].value;
+		$("#modal_edit_temp").modal('hide');
+		$(caller).trigger("keydown");
+		$("#form_edit_temp").off("submit");
+		event.preventDefault();
+		event.stopPropagation();
+	});
+}
+
+function increment(caller){
+	var str = caller.parentElement.children[1].value;
+	var value = parseInt(str);
+	value += 5;
+	caller.parentElement.children[1].value = value;
+	$(caller.parentElement.children[1]).trigger("keydown");
+}
+
+function decrement(caller){
+	var str = caller.parentElement.children[1].value;
+	var value = parseInt(str);
+	value -= 5;
+	caller.parentElement.children[1].value = value;
+	$(caller.parentElement.children[1]).trigger("keydown");
+}
+//initScene();

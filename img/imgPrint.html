@@ -1,0 +1,470 @@
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="velocity.min.js"></script>
+<script>
+$.get("http://192.168.1.40/rr_filelist?dir=0:/www/img/GCodePreview/LynxHead", function(result){
+console.log(result.files);
+	for (var i = 0; i < result.files.length; ++i)
+	{
+	console.log(result.files[i].name);
+		var img = document.createElement('img')
+		img.src = "http://192.168.1.40/img/GCodePreview/LynxHead/"+result.files[i].name
+		//document.body.append(img);
+	}
+});
+</script>
+
+<svg width="500" height="500">
+  
+  <text x="195" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: +50</text>
+  <text x="195" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 250px 250px;">Y: +50</text>
+  <text x="195" y="440" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: -50</text>
+  <text x="195" y="90" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 250px 250px;">Y: -50</text>
+  <path id="fastXP"   d="M 108 108 A 200 200 0 0 1 392 108 L 357 143 A 150 150 0 0 0 143 143 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="fastYP"   d="M 392 108 A 200 200 0 0 1 392 392 L 357 357 A 150 150 0 0 0 357 143 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="fastXM"   d="M 392 392 A 200 200 0 0 1 108 392 L 143 357 A 150 150 0 0 0 357 357 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="fastYM"   d="M 108 392 A 200 200 0 0 1 108 108 L 143 143 A 150 150 0 0 0 143 357 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  
+  <text x="195" y="140" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: +10</text>
+  <text x="195" y="140" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 250px 250px;">Y: +10</text>
+  <text x="195" y="390" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: -10</text>
+  <text x="195" y="140" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 250px 250px;">Y: -10</text>
+  <path id="mediumXP" d="M 143 143 A 150 150 0 0 1 357 143 L 321 179 A 100 100 0 0 0 179 179 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="mediumYP" d="M 357 143 A 150 150 0 0 1 357 357 L 321 321 A 100 100 0 0 0 321 179 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="mediumXM" d="M 357 357 A 150 150 0 0 1 143 357 L 179 321 A 100 100 0 0 0 321 321 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="mediumYM" d="M 143 357 A 150 150 0 0 1 143 143 L 179 179 A 100 100 0 0 0 179 321 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  
+  <text x="200" y="195" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: +1</text>
+  <text x="200" y="195" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 250px 250px;">Y: +1</text>
+  <text x="200" y="330" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif;">X: -1</text>
+  <text x="200" y="195" style="font-size: 2rem;font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 250px 250px;">Y: -1</text>
+  <path id="slowXP"   d="M 179 179 A 100 100 0 0 1 321 179 L 286 214 A 50 50 0 0 0 214 214 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="slowYP"   d="M 321 179 A 100 100 0 0 1 321 321 L 286 286 A 50 50 0 0 0 286 214 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="slowXM"   d="M 321 321 A 100 100 0 0 1 179 321 L 214 286 A 50 50 0 0 0 286 286 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="slowYM"   d="M 179 321 A 100 100 0 0 1 179 179 L 214 214 A 50 50 0 0 0 214 286 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  
+  <text x="222" y="220" style="font-family: Verdana, Arial, Courier, sans-serif;">X:+0.1</text>
+  <text x="221" y="220" style="font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(90deg); transform-origin: 250px 250px;">Y:+0.1</text>
+  <text x="222" y="290" style="font-family: Verdana, Arial, Courier, sans-serif;">X:-0.1</text>
+  <text x="223" y="220" style="font-family: Verdana, Arial, Courier, sans-serif; transform: rotate(-90deg); transform-origin: 250px 250px;">Y:-0.1</text>
+  <path id="crawlXP"  d="M 214 214 A 50 50 0 0 1 286 214 L 250 250 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="crawlYP"  d="M 286 214 A 50 50 0 0 1 286 286 L 250 250 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="crawlXM"  d="M 286 286 A 50 50 0 0 1 214 286 L 250 250 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+  <path id="crawlYM"  d="M 214 286 A 50 50 0 0 1 214 214 L 250 250 z" stroke="black" strokeMwidth="2" fill="#00000000"></path>
+</svg>
+<script>
+$("#crawlXP").on({
+	mousedown : function(){ 
+		if($('#crawlXP').css('fill') == "rgba(0, 0, 0, 0)")
+			$('#crawlXP').css('fill', '#00FF00B0');
+	},
+	mouseup: function () { 
+		if($('#crawlXP').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#crawlXP').css('fill', '#00000000');
+			}, 50);
+		}
+	},
+	mouseleave: function () {
+		$('#crawlXP').css('fill', '#00000000');
+	}
+})
+
+$("#slowXP").on({
+	mousedown : function(){ 
+		if($('#crawlXP').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlXP').css('fill', '#00FF00B0');
+			$('#slowXP').css('fill', '#FFFF00B0');
+		}
+	},
+	mouseup: function () { 
+		if($('#crawlXP').css('fill') != "rgba(0, 0, 0, 0)")
+			setTimeout( function() {
+				$('#slowXP').css('fill', '#00000000');
+				$('#crawlXP').css('fill', '#00000000');
+		}, 100)
+	},	
+	mouseleave: function () {
+		$('#crawlXP').css('fill', '#00000000');
+		$('#slowXP').css('fill', '#00000000');
+	}
+})
+
+$("#mediumXP").on({
+	mousedown : function(){ 
+		if($('#crawlXP').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlXP').css('fill', '#00FF00B0');
+			$('#slowXP').css('fill', '#FFFF00B0');
+			$('#mediumXP').css('fill', '#FF8800B0');
+		}
+	},
+	mouseup: function () {
+		if($('#crawlXP').css('fill') != "rgba(0, 0, 0, 0)")
+		setTimeout( function() {
+			$('#mediumXP').css('fill', '#00000000');
+			$('#slowXP').css('fill', '#00000000');
+			$('#crawlXP').css('fill', '#00000000');
+		}, 150)
+	},	
+	mouseleave: function () {
+		$('#crawlXP').css('fill', '#00000000');
+		$('#slowXP').css('fill', '#00000000');
+		$('#mediumXP').css('fill', '#00000000');
+	}
+})
+
+$("#fastXP").on({
+	mousedown : function(){
+		if($('#crawlXP').css('fill') == "rgba(0, 0, 0, 0)"){
+			$('#crawlXP').css('fill', '#00FF00B0');
+			$('#slowXP').css('fill', '#FFFF00B0');
+			$('#mediumXP').css('fill', '#FF8800B0');
+			$('#fastXP').css('fill', '#FF0000B0');
+		}
+	},
+	mouseup: function () { 
+	if($('#crawlXP').css('fill') != "rgba(0, 0, 0, 0)")
+		setTimeout( function(){
+			$('#fastXP').css('fill', '#00000000');
+			$('#mediumXP').css('fill', '#00000000');
+			$('#slowXP').css('fill', '#00000000');
+			$('#crawlXP').css('fill', '#00000000');
+		}, 200)
+	},	
+	mouseleave: function () {
+		$('#crawlXP').css('fill', '#00000000');
+		$('#slowXP').css('fill', '#00000000');
+		$('#mediumXP').css('fill', '#00000000');
+		$('#fastXP').css('fill', '#00000000');
+	}
+})
+
+$("#crawlYP").on({
+	mousedown : function(){ 
+		if($('#crawlYP').css('fill') == "rgba(0, 0, 0, 0)")
+			$('#crawlYP').css('fill', '#00FF00B0');
+	},
+	mouseup: function () { 
+		if($('#crawlYP').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+		setTimeout( function() {
+			$('#crawlYP').css('fill', '#00000000');
+	}, 50)
+	}
+	},
+	mouseleave: function () {
+		$('#crawlYP').css('fill', '#00000000');
+	}
+})
+
+$("#slowYP").on({
+	mousedown : function(){ 
+		if($('#crawlYP').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+		$('#crawlYP').css('fill', '#00FF00B0');
+		setTimeout( function() {
+			$('#slowYP').css('fill', '#FFFF00B0');
+			}, 50);
+		}
+	},
+	mouseup: function () { 
+		if($('#crawlYP').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#slowYP').css('fill', '#00000000');
+				$('#crawlYP').css('fill', '#00000000');
+			}, 100)
+		}
+	},	
+	mouseleave: function () {
+		$('#crawlYP').css('fill', '#00000000');
+		$('#slowYP').css('fill', '#00000000');
+	}
+})
+
+$("#mediumYP").on({
+	mousedown : function(){ 
+		if($('#crawlYP').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlYP').css('fill', '#00FF00B0');
+			setTimeout( function() {
+				$('#slowYP').css('fill', '#FFFF00B0');
+				setTimeout( function() {
+					$('#mediumYP').css('fill', '#FF8800B0');
+				}, 50);
+			}, 50);
+		}
+	},
+	mouseup: function () {
+		if($('#crawlYP').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#mediumYP').css('fill', '#00000000');
+				$('#slowYP').css('fill', '#00000000');
+				$('#crawlYP').css('fill', '#00000000');
+			}, 150)
+		}
+	},	
+	mouseleave: function () {
+		$('#crawlYP').css('fill', '#00000000');
+		$('#slowYP').css('fill', '#00000000');
+		$('#mediumYP').css('fill', '#00000000');
+	}
+})
+
+$("#fastYP").on({
+	mousedown : function(){
+		if($('#crawlYP').css('fill') == "rgba(0, 0, 0, 0)"){
+			$('#crawlYP').css('fill', '#00FF00B0');
+			setTimeout( function() {
+				$('#slowYP').css('fill', '#FFFF00B0');
+				setTimeout( function() {
+					$('#mediumYP').css('fill', '#FF8800B0');
+					setTimeout( function() {
+						$('#fastYP').css('fill', '#FF0000B0');
+					}, 50);
+				}, 50);
+			}, 50);
+		}
+	},
+	mouseup: function () { 
+		if($('#crawlYP').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#fastYP').css('fill', '#00000000');
+				$('#mediumYP').css('fill', '#00000000');
+				$('#slowYP').css('fill', '#00000000');
+				$('#crawlYP').css('fill', '#00000000');	
+			}, 200)
+		}
+	},	
+	mouseleave: function () {
+		$('#crawlYP').css('fill', '#00000000');
+		$('#slowYP').css('fill', '#00000000');
+		$('#mediumYP').css('fill', '#00000000');
+		$('#fastYP').css('fill', '#00000000');
+	}
+})
+
+$("#crawlXM").on({
+	mousedown : function(){ 
+		if($('#crawlXM').css('fill') == "rgba(0, 0, 0, 0)")
+			$('#crawlXM').css('fill', '#00FF00B0');
+	},
+	mouseup: function () { 
+		if($('#crawlXM').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#crawlXM').css('fill', '#00000000');
+			}, 220)
+		}
+	},
+	mouseleave: function () {
+		$('#crawlXM').css('fill', '#00000000');
+	}
+})
+
+$("#slowXM").on({
+	mousedown : function(){ 
+		if($('#crawlXM').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlXM').css('fill', '#00FF00B0');
+			$('#slowXM').css('fill', '#FFFF00B0');
+		}
+	},
+	mouseup: function () { 
+		if($('#crawlXM').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#slowXM').css('fill', '#00000000');
+				setTimeout( function() {
+					$('#crawlXM').css('fill', '#00000000');
+				}, 60)
+			}, 160)
+		}
+	},	
+	mouseleave: function () {
+		$('#crawlXM').css('fill', '#00000000');
+		$('#slowXM').css('fill', '#00000000');
+	}
+})
+
+$("#mediumXM").on({
+	mousedown : function(){ 
+		if($('#crawlXM').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlXM').css('fill', '#00FF00B0');
+			$('#slowXM').css('fill', '#FFFF00B0');
+			$('#mediumXM').css('fill', '#FF8800B0');
+		}
+	},
+	mouseup: function () {
+		if($('#crawlXM').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+			setTimeout( function() {
+				$('#mediumXM').css('fill', '#00000000');
+				setTimeout( function() {
+					$('#slowXM').css('fill', '#00000000');
+					setTimeout( function() {
+						$('#crawlXM').css('fill', '#00000000');
+					}, 40)
+				}, 40)
+			}, 140)
+		}
+	},	
+	mouseleave: function () {
+		$('#crawlXM').css('fill', '#00000000');
+		$('#slowXM').css('fill', '#00000000');
+		$('#mediumXM').css('fill', '#00000000');
+	}
+})
+var start;
+$("#fastXM").on({
+	mousedown : function(){
+	start = new Date()-0;
+		if($('#crawlXM').css('fill') == "rgba(0, 0, 0, 0)"){
+			$('#crawlXM').css('fill', '#00FF00B0');
+			$('#slowXM').css('fill', '#FFFF00B0');
+			$('#mediumXM').css('fill', '#FF8800B0');
+			$('#fastXM').css('fill', '#FF0000B0');
+		}
+	},
+	mouseup: function () { 
+	console.log(new Date()-start);
+	if($('#crawlXM').css('fill') != "rgba(0, 0, 0, 0)")
+		setTimeout( function() {
+			$('#fastXM').css('fill', '#00000000');
+			setTimeout( function() {
+				$('#mediumXM').css('fill', '#00000000');
+				setTimeout( function() {
+					$('#slowXM').css('fill', '#00000000');
+					setTimeout( function() {
+						$('#crawlXM').css('fill', '#00000000');
+					}, 30)
+				}, 30)
+			}, 30)
+		}, 130)
+	},	
+	mouseleave: function () {
+		$('#crawlXM').css('fill', '#00000000');
+		$('#slowXM').css('fill', '#00000000');
+		$('#mediumXM').css('fill', '#00000000');
+		$('#fastXM').css('fill', '#00000000');
+	}
+})
+
+$("#crawlYM").on({
+	mousedown : function(){ 
+		if($('#crawlYM').css('fill') == "rgba(0, 0, 0, 0)")
+			$('#crawlYM').css('fill', '#00FF00B0');
+	},
+	mouseup: function () { 
+		if($('#crawlYM').css('fill') != "rgba(0, 0, 0, 0)")
+		{
+		setTimeout( function() {
+			$('#crawlYM').css('fill', '#00000000');
+	}, 200)
+	}
+	},
+	mouseleave: function () {
+		$('#crawlYM').css('fill', '#00000000');
+	}
+})
+
+$("#slowYM").on({
+	mousedown : function(){ 
+		if($('#crawlYM').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+		$('#crawlYM').css('fill', '#00FF00B0');
+		setTimeout( function() {
+			$('#slowYM').css('fill', '#FFFF00B0');
+			}, 50);
+		}
+	},
+	mouseup: function () { 
+		if($('#crawlYM').css('fill') != "rgba(0, 0, 0, 0)")
+			setTimeout( function() {
+				$('#slowYM').css('fill', '#00000000');
+				setTimeout( function(){
+				$('#crawlYM').css('fill', '#00000000');
+			}, 100);
+		}, 200)
+	},	
+	mouseleave: function () {
+		$('#crawlYM').css('fill', '#00000000');
+		$('#slowYM').css('fill', '#00000000');
+	}
+})
+
+$("#mediumYM").on({
+	mousedown : function(){ 
+		if($('#crawlYM').css('fill') == "rgba(0, 0, 0, 0)")
+		{
+			$('#crawlYM').css('fill', '#00FF00B0');
+			setTimeout( function() {
+				$('#slowYM').css('fill', '#FFFF00B0');
+				setTimeout( function() {
+					$('#mediumYM').css('fill', '#FF8800B0');
+				}, 50);
+			}, 50);
+		}
+	},
+	mouseup: function () {
+		if($('#crawlYM').css('fill') != "rgba(0, 0, 0, 0)")
+			setTimeout( function() {
+				$('#mediumYM').css('fill', '#00000000');
+				setTimeout( function(){
+					$('#slowYM').css('fill', '#00000000');
+					setTimeout( function(){
+						$('#crawlYM').css('fill', '#00000000');
+					}, 100);
+				}, 100);
+			}, 200)
+	},	
+	mouseleave: function () {
+		$('#crawlYM').css('fill', '#00000000');
+		$('#slowYM').css('fill', '#00000000');
+		$('#mediumYM').css('fill', '#00000000');
+	}
+})
+
+$("#fastYM").on({
+	mousedown : function(){
+		if($('#crawlYM').css('fill') == "rgba(0, 0, 0, 0)"){
+			$('#crawlYM').css('fill', '#00FF00B0');
+			setTimeout( function() {
+				$('#slowYM').css('fill', '#FFFF00B0');
+				setTimeout( function() {
+					$('#mediumYM').css('fill', '#FF8800B0');
+					setTimeout( function() {
+						$('#fastYM').css('fill', '#FF0000B0');
+					}, 50);
+				}, 50);
+			}, 50);
+		}
+	},
+	mouseup: function () { 
+	if($('#crawlYM').css('fill') != "rgba(0, 0, 0, 0)")
+		setTimeout( function() {
+			$('#fastYM').css('fill', '#00000000');
+			setTimeout(function() {
+				$('#mediumYM').css('fill', '#00000000');
+				setTimeout( function(){
+					$('#slowYM').css('fill', '#00000000');
+					setTimeout( function(){
+						$('#crawlYM').css('fill', '#00000000');
+					}, 100);
+				}, 100);
+			}, 100);
+		}, 200)
+	},	
+	mouseleave: function () {
+		$('#crawlYM').css('fill', '#00000000');
+		$('#slowYM').css('fill', '#00000000');
+		$('#mediumYM').css('fill', '#00000000');
+		$('#fastYM').css('fill', '#00000000');
+	}
+})
+</script>

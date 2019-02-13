@@ -25,6 +25,7 @@ var boundingBox = {min:{x:10000,y:10000,z:10000}, max:{x:-10000,y:-10000,z:-1000
 window.onload = function() {
 	lineReader = new LineReader({chunkSize: 512	});
 	$("#read").click(function(){lectDonnees (document.getElementById('fileInput').files[0])});
+	initScene();
 };
 
 function lectDonnees() {
@@ -47,7 +48,7 @@ function lectDonnees() {
 	zLayer = 0;
 	zPrevLayer = 0;
 	parseRows[parsedFileCount].find(".glyphicon").removeClass("glyphicon-asterisk").addClass("glyphicon-cloud-upload");
-	
+
 	pointMaterial = new THREE.LineBasicMaterial({color : 0xff0000});
 	var moveMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
 	fileInput = parseFiles[parsedFileCount];
@@ -80,7 +81,7 @@ function lectDonnees() {
 			var progress = Math.ceil((instructionPos/fileSize)*100);
 			parseRows[parsedFileCount].find(".progress-bar").css("width", progress + "%");
 			parseRows[parsedFileCount].find(".progress-bar > span").text(progress + " %");
-			
+
 			lastPrct = Math.ceil((instructionPos/fileSize)*100);
 			var ELT = ((new Date() - start)/(instructionPos/fileSize));
 			var ERT = ELT * (1-(instructionPos/fileSize))
@@ -88,18 +89,18 @@ function lectDonnees() {
 		}
 		//if (totalCount < 100)
 			next();
-	});		
-	
+	});
+
 	lineReader.on('abort', function(abo){
 		console.warn("read aborted");
 		console.warn(abo);
 		lineReader = new LineReader({chunkSize: 512	});
 	})
-	
+
 	lineReader.on('error', function(err) {
 		console.log(err);
 	});
-	
+
 	lineReader.on('end', function() {
 		console.log("Read complete!\n"+totalCount+" lines parsed\n took " +  toHMS(Math.round((new Date() - start)/1000), true));
 		parseRows[parsedFileCount].find("#eta")[0].innerHTML = "Done took: " + toHMS(Math.round((new Date() - start)/1000), true)
@@ -111,7 +112,7 @@ function lectDonnees() {
 		$("#lastLayer")[0].value = nbLayers;
 		$("#firstLayer")[0].max = nbLayers;
 		$("#lastLayer")[0].max = nbLayers;*/
-		initRender();		
+		initRender();
 		// Update glyphicon and progress bar
 		parseRows[parsedFileCount].find(".glyphicon").removeClass("glyphicon-cloud-upload").addClass( "glyphicon-ok" );
 		parseRows[parsedFileCount].find(".progress-bar").removeClass("progress-bar-info progress-bar-warning").addClass( "progress-bar-success").css("width", "100%");
@@ -122,9 +123,9 @@ function lectDonnees() {
 		if (parseFiles.length > parsedFileCount) {
 			// Parse the next file
 			lectDonnees();
-		} 
+		}
 	});
-	
+
 	lineReader.read(fileInput);
 }
 
@@ -151,7 +152,7 @@ function parseGCode(line)
 				args[key] = value;
 			}
 		  });
-		  extractGCode(args);	  
+		  extractGCode(args);
 		}
 	}
 	if (comLine)
