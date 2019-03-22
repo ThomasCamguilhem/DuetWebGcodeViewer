@@ -1,0 +1,138 @@
+<html>
+	<head>
+		<script src="lib/jquery.min.js"></script>
+		<script src="gif.js"></script>
+		<script src="gif.worker.js"></script>
+		<style>
+			svg {
+				margin-top: 10px;
+				animation: movTHead 2s linear infinite;
+			}
+			#layerN {
+				position: relative;
+				margin-left: 21px;
+				margin-top: -9px;
+				background: #2d4ea2;
+				height: 5px;
+				width: 5px;
+				border-bottom-right-radius: 5px;
+				border-bottom-left-radius: 5px;
+				animation: layN 2s linear infinite;
+			}
+
+			#layerN1 {
+				position: relative;
+				margin-left: 21px;
+				margin-top: 3px;
+				background: #fdb913;
+				height: 5px;
+				width: 207px;
+				border-bottom-right-radius: 5px;
+				border-bottom-left-radius: 5px;
+				animation: layN1 2s linear infinite;
+			}
+
+			@keyframes movTHead {
+				0% {
+					margin-left: 0px;
+				}
+				49% {
+					margin-left: 200px;
+					margin-top: 15px;
+				}
+				50% {
+					margin-top: 10px;
+				}
+				99% {
+					margin-left: 0px;
+					margin-top: 15px;
+				}
+				100% {
+					margin-top: 10px;
+				}
+			}
+
+			@keyframes layN {
+				49% {
+					width: 207px;
+					margin-top: -9px;
+					background: #2d4ea2;
+				}
+				50% {
+					margin-top: 0px;
+				}
+				99% {
+					width: 207px;
+					margin-top: 0px;
+					background: #2d4ea200;
+				}
+				100% {
+					margin-top: -4px;
+				}
+			}
+
+			@keyframes layN1 {
+				49% {
+					width: 207px;
+					margin-left: 20px;
+					margin-top: 3px;
+					background: #fdb91300;
+				}
+				50% {
+						width: 8px;
+						margin-left: 220px;
+						margin-top: -2px;
+						background: #fdb91300;
+				}
+				51% {
+					background: #fdb913;
+				}
+				99% {
+					width: 207px;
+					margin-left: 21px;
+					margin-top: -2px;
+					background: #fdb913;
+				}
+			}
+	</style>
+
+	</head>
+		<path d="M 0 0 l 200 0 v -5 l -200 5 Z" fill="transparent" stroke="gray" id="pathToFollow">
+		</path>
+	<body onload="">
+			<svg width="49" height="54">
+				<path d="M 12 2 h 25 v 5 h 10 v 5 h -10 v 5 h 10 v 5 h -10 v 5 h 10 v 5 h -10 v 10 l -10 10 h-5 l -10 -10 v -10 h -10 v -5 h 10 v -5 h -10 v -5 h 10 v -5 h -10 v -5 h 10 Z" fill="#fdb913" stroke="#403e3d"/>
+			</svg>
+		<div id="layerN1"></diV>
+		<div id="layerN"/></div>
+		<script>
+			var gif = new GIF({
+			  workers: 8,
+			  quality: 1,
+			  //workerScript: "js/gif.worker.js",
+			});
+			function generateGif(){
+				var imgs = $("img")
+				for (var i = 0; i < imgs.length; i++)
+				{
+					var imageElement = imgs[i];
+					imageElement.crossOrigin = "Anonymous";
+					// add a image element
+					gif.addFrame(imageElement);
+
+					/*// or a canvas element
+					gif.addFrame(canvasElement, {delay: 200});
+
+					// or copy the pixels from a canvas context
+					gif.addFrame(ctx, {copy: true});
+				*/
+				}
+
+				gif.on('finished', function(blob) {
+				  window.open(URL.createObjectURL(blob));
+				});
+
+				gif.render();
+			}
+		</script>
+	</body>
